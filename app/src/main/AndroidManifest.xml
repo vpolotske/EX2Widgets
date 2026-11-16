@@ -16,6 +16,12 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!--
+        Доступ к журналу использования: только он честно говорит, какой экран
+        сейчас открыт. Выдаётся не установкой, а вручную — экраном «Использование»
+        или appops (им так же выдаётся и наложение).
+    -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
 
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
     <uses-permission android:name="android.car.permission.CAR_ENERGY" />

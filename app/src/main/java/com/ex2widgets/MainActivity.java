@@ -41,6 +41,8 @@ public final class MainActivity extends Activity {
     private TextView modeStatus;
     private TextView permissionStatus;
     private TextView permissionHint;
+    private TextView detectStatus;
+    private TextView detectHint;
     private TextView globalAlphaValue;
     private SeekBar globalAlphaSeek;
     /** Экран разрешений, который реально открылся, — им же и отвечаем на «не открылся». */
@@ -54,6 +56,8 @@ public final class MainActivity extends Activity {
         modeStatus = findViewById(R.id.modeStatus);
         permissionStatus = findViewById(R.id.permissionStatus);
         permissionHint = findViewById(R.id.permissionHint);
+        detectStatus = findViewById(R.id.detectStatus);
+        detectHint = findViewById(R.id.detectHint);
         globalAlphaValue = findViewById(R.id.globalAlphaValue);
         globalAlphaSeek = findViewById(R.id.globalAlphaSeek);
 
@@ -70,6 +74,8 @@ public final class MainActivity extends Activity {
             refresh();
         });
         findViewById(R.id.overlayPermission).setOnClickListener(v -> requestOverlayPermission());
+        findViewById(R.id.usagePermission).setOnClickListener(v -> requestUsageAccess());
+        findViewById(R.id.detectCheck).setOnClickListener(v -> checkForegroundDetection());
 
         globalAlphaSeek.setMax(100);
         globalAlphaSeek.setOnSeekBarChangeListener(new SeekCommit() {
@@ -108,6 +114,7 @@ public final class MainActivity extends Activity {
     private void refresh() {
         refreshMode();
         refreshPermission();
+        refreshDetection();
         int global = Prefs.widgetBgOpacity(this);
         globalAlphaSeek.setOnSeekBarChangeListener(null);
         globalAlphaSeek.setProgress(global);
@@ -169,6 +176,85 @@ public final class MainActivity extends Activity {
     private void repaint() {
         if (anyPlaced()) WidgetUpdateService.refreshOpacity(this);
         OverlayWidgetService.restart(this);
+    }
+
+    /**
+     * Что видит служба про передний экран. Пока панели висят поверх всего,
+     * пользователю нужно показать и причину: без доступа к использованию
+     * определить открытое приложение нечем.
+     */
+    private void refreshDetection() {
+        if (!OverlayWidgetService.isRunning()) {
+            detectStatus.setText(R.string.overlay_detect_idle);
+            detectHint.setVisibility(View.GONE);
+            return;
+        }
+        // Доступ считаем выданным, если его подтверждает хотя бы один источник:
+        // appop могли и не дать прочитать, а события уже идут.
+        boolean granted = OverlayWidgetService.usageAccessGranted(this)
+                || "usage".equals(OverlayWidgetService.detectionSource());
+        String top = OverlayWidgetService.foregroundPackage();
+        String home = OverlayWidgetService.homePackage();
+        String reason = OverlayWidgetService.hideReason();
+        StringBuilder text = new StringBuilder();
+        text.append(getString(granted
+                ? R.string.overlay_access_usage_granted
+                : R.string.overlay_access_usage_missing)).append("\n");
+        text.append(getString(R.string.overlay_detect_line,
+                top.isEmpty() ? "?" : top,
+                home.isEmpty() ? "?" : home,
+                sourceLabel(OverlayWidgetService.detectionSource()))).append("\n");
+        text.append(reason.isEmpty() ? getString(R.string.overlay_detect_home) : reason);
+        detectStatus.setText(text.toString());
+        detectHint.setVisibility(granted ? View.GONE : View.VISIBLE);
+        if (!granted) {
+            detectHint.setText(getString(R.string.settings_usage_manual, getPackageName()));
+        }
+    }
+
+    /** Чем определён передний экран — словами, чтобы с экрана было понятно. */
+    private String sourceLabel(String source) {
+        if ("usage".equals(source)) return getString(R.string.overlay_source_usage);
+        if ("tasks".equals(source)) return getString(R.string.overlay_source_tasks);
+        return getString(R.string.overlay_source_none);
+    }
+
+    /** Перезапуск наложения: служба заново читает и доступ, и передний экран. */
+    private void checkForegroundDetection() {
+        OverlayWidgetService.restart(this);
+        // Один тик опроса (~1 с) нужен, чтобы служба успела перечитать экран.
+        detectStatus.postDelayed(this::refreshDetection, 1500L);
+        refreshDetection();
+    }
+
+    /**
+     * Экран «Использование» открывается не всегда: про запас идём в обычные
+     * сведения о приложении, где этот доступ тоже можно найти.
+     */
+    private void requestUsageAccess() {
+        String pkg = "package:" + getPackageName();
+        Intent[] intents = {
+                new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
+                new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse(pkg)),
+        };
+        String[] labels = {
+                getString(R.string.perm_screen_usage),
+                getString(R.string.perm_screen_details),
+        };
+        for (int i = 0; i < intents.length; i++) {
+            if (!resolvable(intents[i])) continue;
+            try {
+                startActivity(intents[i]);
+                LogStore.add(this, "usage access screen opened: " + labels[i]);
+                refresh();
+                return;
+            } catch (Throwable t) {
+                LogStore.add(this, "usage access screen failed: " + labels[i] + " " + t);
+            }
+        }
+        LogStore.add(this, "no usage access screen available");
+        Toast.makeText(this, R.string.status_perm_no_screen, Toast.LENGTH_LONG).show();
+        refresh();
     }
 
     private boolean anyPlaced() {
@@ -344,7 +430,11 @@ public final class MainActivity extends Activity {
             } else if (Prefs.overlayPinned(MainActivity.this, spec.key)) {
                 overlayPart = getString(R.string.overlay_state_pinned);
             } else {
-                overlayPart = getString(R.string.overlay_state_on);
+                // Спрятана приложением — это видно только службе, пусть и
+                // скажет прямо, иначе строка выглядит как «панель не появляется».
+                String reason = OverlayWidgetService.hideReason();
+                overlayPart = reason.isEmpty()
+                        ? getString(R.string.overlay_state_on) : reason;
             }
             return getString(R.string.status_widget_line, widgetPart, overlayPart);
         }

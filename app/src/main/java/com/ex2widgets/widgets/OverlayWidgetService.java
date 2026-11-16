@@ -34,7 +34,19 @@ import java.util.List;
 public final class OverlayWidgetService extends Service {
 
     private static final long POLL_MS = 1000L;
+    /** Спрятанные панели: возврат на рабочий стол ждём реже, чем обновляем видимые. */
+    private static final long HIDDEN_POLL_MS = 3000L;
     private static final String ACTION_RESTART = "com.ex2widgets.overlay.RESTART";
+
+    /** Тип события «экран вышел на передний план» для прежнего уровня API. */
+    private static final int RESUMED_EVENT = 1;
+    /**
+     * Окно событий при первом опросе: за ним экран, который открыли до запуска
+     * службы, уже не виден, а шире — только лишний чтение журнала.
+     */
+    private static final long USAGE_FIRST_WINDOW_MS = 300_000L;
+    /** Раз в десять секунд переспрашиваем, какой пакет теперь рабочий стол. */
+    private static final long LAUNCHER_TTL_MS = 10_000L;
 
     /**
      * Макет EX2 HUB снимался с экрана 1768×1080, поэтому размеры и места в
@@ -52,6 +64,27 @@ public final class OverlayWidgetService extends Service {
     private volatile boolean destroyed;
     private int lastThemeSignature = Integer.MIN_VALUE;
 
+    /** Класс переднего экрана — нужен, чтобы отличить список приложений от рабочего стола. */
+    private String lastTopClass = "";
+    /** До какого момента события использования уже прочитаны. */
+    private long usageSince;
+    private String launcherCache = "";
+    private long launcherAt;
+    /** Ошибку доступа к использованию пишем один раз: опрос идёт каждую секунду. */
+    private boolean usageFailureLogged;
+    /** То же про список задач: без доступа к использованию он спрашивается часто. */
+    private boolean taskFailureLogged;
+
+    // Снимки определения переднего экрана: их показывает экран настроек,
+    // поэтому поля статические — MainActivity читает их без экземпляра службы.
+    private static volatile String lastTopPackage = "";
+    private static volatile String lastTopSource = "";
+    private static volatile String lastHomePackage = "";
+    /** Доступен ли доступ к использованию: без него панели прятать нечем. */
+    private static volatile boolean usageAvailable;
+    /** Почему панели спрятаны сейчас; пусто — прятать нечего или причина неизвестна. */
+    private static volatile String lastHideReason = "";
+
     private final Runnable poll = new Runnable() {
         @Override
         public void run() {
@@ -65,6 +98,7 @@ public final class OverlayWidgetService extends Service {
             if (lastThemeSignature != Integer.MIN_VALUE
                     && lastThemeSignature != themeSignature) {
                 lastThemeSignature = themeSignature;
+                resetUsage();
                 for (OverlaySpec spec : specs) {
                     remove(spec);
                 }
@@ -74,15 +108,17 @@ public final class OverlayWidgetService extends Service {
             lastThemeSignature = themeSignature;
             ForegroundState state = foregroundState();
             boolean anyEnabled = false;
+            boolean anyShown = false;
             for (OverlaySpec spec : specs) {
                 boolean enabled = Prefs.widgetEnabled(OverlayWidgetService.this, spec.key);
                 anyEnabled |= enabled;
+                // Закреплённая панель не зависит от того, что сейчас открыто.
                 boolean pinned = Prefs.overlayPinned(OverlayWidgetService.this, spec.key);
-                // Закреплённая панель не зависит от того, умел ли определить рабочий стол.
-                boolean show = enabled && (pinned || (state.launcher && !state.appList));
+                boolean show = enabled && (pinned || state.onHome);
                 if (show) {
                     ensure(spec);
                     update(spec);
+                    anyShown = true;
                 } else {
                     remove(spec);
                 }
@@ -91,7 +127,10 @@ public final class OverlayWidgetService extends Service {
                 stopSelf();
                 return;
             }
-            handler.postDelayed(this, POLL_MS);
+            // Пока открыто чужое приложение, панели не нужны вовсе: опрос
+            // продолжается реже, и при возврате на рабочий стол они появятся
+            // через несколько секунд.
+            handler.postDelayed(this, anyShown ? POLL_MS : HIDDEN_POLL_MS);
         }
     };
 
@@ -163,6 +202,7 @@ public final class OverlayWidgetService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_RESTART.equals(intent.getAction())) {
+            resetUsage();
             for (OverlaySpec spec : specs) {
                 remove(spec);
             }
@@ -176,6 +216,7 @@ public final class OverlayWidgetService extends Service {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (destroyed) return;
+        resetUsage();
         for (OverlaySpec spec : specs) {
             remove(spec);
         }
@@ -359,30 +400,183 @@ public final class OverlayWidgetService extends Service {
         return night * 10 + orientation;
     }
 
+    /**
+     * Что сейчас у пользователя перед глазами. Единственный честный источник —
+     * события использования: ActivityManager.getRunningTasks на Android 8+
+     * отдаёт урезанный список, и на ГУ в нём весь день остаётся рабочий стол,
+     * даже когда открыто системное приложение (из-за него панели и висели
+     * поверх чужих экранов).
+     */
     private ForegroundState foregroundState() {
+        readUsageEvents();
+        // Доступа к журналу нет или событий с запуска не было: начнём хотя бы
+        // со списка задач — он может врать, но пустота врёт вернее.
+        if (!usageAvailable || lastTopPackage.isEmpty()) readTasksTop();
+        String pkg = lastTopPackage;
+        if (pkg.isEmpty()) {
+            // Ни событий, ни задач: оставляем панели видимыми, но причину видно
+            // в настройках, а «Всегда показывать» работает без этой проверки.
+            lastTopSource = "";
+            lastHideReason = "";
+            return new ForegroundState(true);
+        }
+        // Наши экраны (настройки) панелью перекрывать нельзя.
+        if (pkg.equals(getPackageName())) {
+            lastHideReason = getString(R.string.overlay_hide_ours);
+            return new ForegroundState(false);
+        }
+        boolean appList = WidgetModes.STOCK_LAUNCHER.equals(pkg)
+                && lastTopClass.contains("AppListActivity");
+        boolean onHome = !appList && isHome(pkg, launcherPackage());
+        lastHideReason = onHome ? "" : getString(appList
+                ? R.string.overlay_hide_applist : R.string.overlay_hide_app, appName(pkg));
+        return new ForegroundState(onHome);
+    }
+
+    /**
+     * События использования с прошлого опроса. Водяной знак сдвигаем до самого
+     * запроса, а не до последней записи: иначе на неподвижном экране окно
+     * растёт, и каждый опрос читает всё больше событий.
+     */
+    private boolean readUsageEvents() {
+        try {
+            android.app.usage.UsageStatsManager usm =
+                    (android.app.usage.UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
+            if (usm == null) return false;
+            long now = System.currentTimeMillis();
+            long since = usageSince == 0L ? now - USAGE_FIRST_WINDOW_MS : usageSince;
+            usageSince = now;
+            android.app.usage.UsageEvents events = usm.queryEvents(since, now);
+            usageAvailable = true;
+            if (events == null) return false;
+            boolean read = false;
+            android.app.usage.UsageEvents.Event event = new android.app.usage.UsageEvents.Event();
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event);
+                read = true;
+                observe(event);
+            }
+            if (!lastTopPackage.isEmpty()) lastTopSource = "usage";
+            return read;
+        } catch (Throwable t) {
+            usageAvailable = false;
+            if (!usageFailureLogged) {
+                usageFailureLogged = true;
+                LogStore.add(this, "overlay usage probe failed: " + t);
+            }
+            return false;
+        }
+    }
+
+    /** Из события использования важен только выход экрана на передний план. */
+    private void observe(android.app.usage.UsageEvents.Event event) {
+        if (event.getEventType() != RESUMED_EVENT) return;
+        String pkg = event.getPackageName() == null ? "" : event.getPackageName();
+        if (pkg.isEmpty()) return;
+        lastTopPackage = pkg;
+        lastTopClass = event.getClassName() == null ? "" : event.getClassName();
+    }
+
+    /** Запасной источник переднего экрана: список задач. */
+    private boolean readTasksTop() {
         try {
             ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-            if (am == null) return new ForegroundState(true, false);
+            if (am == null) return false;
             List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
-            if (tasks == null || tasks.isEmpty() || tasks.get(0) == null) {
-                return new ForegroundState(true, false);
-            }
+            if (tasks == null || tasks.isEmpty() || tasks.get(0) == null) return false;
             ComponentName top = tasks.get(0).topActivity;
-            if (top == null) return new ForegroundState(true, false);
-            String pkg = top.getPackageName() == null ? "" : top.getPackageName();
-            // Наши экраны (настройки) панелью перекрывать нельзя.
-            if (pkg.equals(getPackageName())) return new ForegroundState(false, false);
-            String cls = top.getClassName() == null ? "" : top.getClassName();
-            String home = WidgetModes.launcherPackage(this);
-            boolean appList = WidgetModes.STOCK_LAUNCHER.equals(pkg)
-                    && cls.contains("AppListActivity");
-            // Если лаунчер определить не удалось, молча прятать панели — неверно:
-            // показываем, а пользователь закрепит нужный вариант сам.
-            boolean homeVisible = home.isEmpty() || home.equals(pkg);
-            return new ForegroundState(homeVisible && !appList, appList);
+            if (top == null || top.getPackageName() == null
+                    || top.getPackageName().isEmpty()) return false;
+            lastTopPackage = top.getPackageName();
+            lastTopClass = top.getClassName() == null ? "" : top.getClassName();
+            lastTopSource = "tasks";
+            return true;
         } catch (Throwable t) {
-            LogStore.add(this, "overlay foreground check failed: " + t);
-            return new ForegroundState(true, false);
+            if (!taskFailureLogged) {
+                taskFailureLogged = true;
+                LogStore.add(this, "overlay task probe failed: " + t);
+            }
+            return false;
+        }
+    }
+
+    /** Новый экран или перезапуск: прежнее решение и прежнее окно событий ни при чём. */
+    private void resetUsage() {
+        usageSince = 0L;
+        lastTopPackage = "";
+        lastTopClass = "";
+        lastTopSource = "";
+        usageAvailable = false;
+        lastHideReason = "";
+    }
+
+    /** Как назвать передний экран в строке состояния: имя приложения, а не пакет. */
+    private String appName(String pkg) {
+        try {
+            android.content.pm.ApplicationInfo info =
+                    getPackageManager().getApplicationInfo(pkg, 0);
+            CharSequence label = getPackageManager().getApplicationLabel(info);
+            if (label != null && label.length() > 0) return label.toString();
+        } catch (Throwable ignored) {
+        }
+        return pkg;
+    }
+
+    /** Дом — это HOME; если он не разрешился, узнаём его по типовым именам пакетов. */
+    private boolean isHome(String pkg, String home) {
+        if (!home.isEmpty()) return home.equals(pkg);
+        return pkg.equals(WidgetModes.STOCK_LAUNCHER) || pkg.endsWith(".launcher")
+                || pkg.equals("com.miui.home");
+    }
+
+    /** HOME разрешился один раз и протухает по времени, а не на каждый тик. */
+    private String launcherPackage() {
+        long now = System.currentTimeMillis();
+        if (launcherCache.isEmpty() || now - launcherAt > LAUNCHER_TTL_MS) {
+            launcherAt = now;
+            launcherCache = WidgetModes.launcherPackage(this);
+            lastHomePackage = launcherCache;
+        }
+        return launcherCache;
+    }
+
+    /** Пакет, который служба считает передним экраном; пусто — не определён. */
+    public static String foregroundPackage() {
+        return lastTopPackage;
+    }
+
+    /** Разрешённый HOME; пусто — рабочий стол не опознан. */
+    public static String homePackage() {
+        return lastHomePackage;
+    }
+
+    /** "usage", "tasks" или "" — чем сейчас определён передний экран. */
+    public static String detectionSource() {
+        return lastTopSource;
+    }
+
+    /** Почему панели сейчас спрятаны; пусто — на рабочем столе или определение молчит. */
+    public static String hideReason() {
+        return lastHideReason;
+    }
+
+    /**
+     * Выдан ли доступ «Использование». Без него журнал отдаёт пусто, а пустой
+     * журнал неотличим от того, что экран не менялся, поэтому спрашиваем appop
+     * напрямую: имя операции — публичная строка, кода из hidden-API не нужно.
+     */
+    @SuppressWarnings("deprecation")
+    public static boolean usageAccessGranted(Context c) {
+        try {
+            android.app.AppOpsManager aom = (android.app.AppOpsManager)
+                    c.getSystemService(Context.APP_OPS_SERVICE);
+            if (aom == null) return false;
+            return aom.checkOpNoThrow("android:get_usage_stats",
+                    android.os.Process.myUid(), c.getPackageName())
+                    == android.app.AppOpsManager.MODE_ALLOWED;
+        } catch (Throwable t) {
+            LogStore.add(c, "overlay usage access check failed: " + t);
+            return false;
         }
     }
 
@@ -395,12 +589,10 @@ public final class OverlayWidgetService extends Service {
     }
 
     private static final class ForegroundState {
-        final boolean launcher;
-        final boolean appList;
+        final boolean onHome;
 
-        ForegroundState(boolean launcher, boolean appList) {
-            this.launcher = launcher;
-            this.appList = appList;
+        ForegroundState(boolean onHome) {
+            this.onHome = onHome;
         }
     }
 

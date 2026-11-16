@@ -55,4 +55,24 @@
     <string name="status_perm_opened">Открыт %1$s — включите наложение там и вернитесь сюда.</string>
     <string name="status_perm_no_screen">В этой системе нет экрана разрешений на наложение: ни один способ не открылся.</string>
     <string name="settings_perm_manual">Вручную: Настройки → Приложения → все приложения → EX2 Widgets → «Поверх других приложений». Если пункта нет (штатный экран Flyme Auto), разрешение выдаётся по adb:\nadb shell appops set %1$s SYSTEM_ALERT_WINDOW allow\nпосле чего откройте приложение ещё раз.</string>
+
+    <!-- Доступ к журналу использования: только он честно говорит, какой экран открыт. -->
+    <string name="settings_usage_permission">Доступ к использованию</string>
+    <string name="settings_detect_check">Проверить определение</string>
+    <string name="settings_usage_note">Чтобы панели не висели над открытым приложением, нужен доступ к журналу использования: без него система не говорит, какой экран сейчас впереди.</string>
+    <string name="overlay_access_usage_granted">Доступ к использованию: выдан, панели будут прятаться за приложениями.</string>
+    <string name="overlay_access_usage_missing">Доступа к использованию нет: передний экран не определить, и панели останутся поверх всех приложений.</string>
+    <string name="perm_screen_usage">системный экран «Использование»</string>
+    <string name="settings_usage_manual">Вручную: Настройки → Приложения → специальные доступы → «Использование» → EX2 Widgets. Там же этот доступ выдаётся из EX2ToolsIV («Управление разрешениями»), а по adb одной строкой:\nadb shell appops set %1$s android:get_usage_stats allow</string>
+
+    <!-- Чем занят передний экран прямо сейчас. -->
+    <string name="overlay_detect_line">Передний экран: %1$s · рабочий стол: %2$s · определено: %3$s</string>
+    <string name="overlay_source_usage">журналом использования</string>
+    <string name="overlay_source_tasks">списком задач</string>
+    <string name="overlay_source_none">ничем</string>
+    <string name="overlay_detect_idle">Наложение не работает: включите хоть один виджет и выдайте разрешение на наложение.</string>
+    <string name="overlay_detect_home">Открыт рабочий стол — панели на месте.</string>
+    <string name="overlay_hide_app">панели спрятаны: открыто %1$s</string>
+    <string name="overlay_hide_applist">панели спрятаны: открыт список приложений</string>
+    <string name="overlay_hide_ours">панели спрятаны: открыты настройки EX2 Widgets</string>
 </resources>
