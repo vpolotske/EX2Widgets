@@ -106,6 +106,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="14dp" />
 
+            <!-- Аварийный режим: если система не говорит правду про передний
+                 экран, прятки снимаются одним переключателем. -->
+            <Switch
+                android:id="@+id/hideBehind"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_hide_behind"
+                android:textColor="@color/hub_label"
+                android:textSize="16sp" />
+
+            <TextView
+                style="@style/SettingsText"
+                android:layout_marginTop="6dp"
+                android:text="@string/settings_hide_behind_note" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="14dp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -142,6 +161,17 @@
                 style="@style/SettingsText"
                 android:layout_marginTop="14dp"
                 android:text="@string/settings_loading" />
+
+            <!-- Что именно служба прочитала в журнале использования: живой
+                 ответ вместо logcat, чтобы проверить ГУ без проводов. -->
+            <TextView
+                android:id="@+id/detectLog"
+                style="@style/SettingsText"
+                android:layout_marginTop="10dp"
+                android:fontFamily="monospace"
+                android:textIsSelectable="true"
+                android:textSize="14sp"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/detectHint"

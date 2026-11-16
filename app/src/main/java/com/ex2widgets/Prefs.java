@@ -82,6 +82,19 @@ public final class Prefs {
         get(c).edit().remove("overlay_" + key + "_x").remove("overlay_" + key + "_y").apply();
     }
 
+    /**
+     * Прятать ли панели, когда впереди приложение. Выключено — панели висят
+     * всегда, как в 1.0.1: это аварийный режим на случай, если система не
+     * говорит правду про передний экран.
+     */
+    public static boolean hideBehindApps(Context c) {
+        return get(c).getBoolean("hide_behind_apps", true);
+    }
+
+    public static void setHideBehindApps(Context c, boolean value) {
+        get(c).edit().putBoolean("hide_behind_apps", value).apply();
+    }
+
     public static boolean overlayPinned(Context c, String key) {
         return get(c).getBoolean("overlay_" + key + "_pinned", false);
     }

@@ -60,6 +60,8 @@
     <string name="settings_usage_permission">Доступ к использованию</string>
     <string name="settings_detect_check">Проверить определение</string>
     <string name="settings_usage_note">Чтобы панели не висели над открытым приложением, нужен доступ к журналу использования: без него система не говорит, какой экран сейчас впереди.</string>
+    <string name="settings_hide_behind">Прятать панели за приложениями</string>
+    <string name="settings_hide_behind_note">Выключите, если панели исчезли и на рабочем столе тоже: тогда они будут висеть всегда. Прошивка может врать про передний экран, и прятки держатся только на том, что удалось честно прочитать.</string>
     <string name="overlay_access_usage_granted">Доступ к использованию: выдан, панели будут прятаться за приложениями.</string>
     <string name="overlay_access_usage_missing">Доступа к использованию нет: передний экран не определить, и панели останутся поверх всех приложений.</string>
     <string name="perm_screen_usage">системный экран «Использование»</string>
@@ -72,6 +74,9 @@
     <string name="overlay_source_none">ничем</string>
     <string name="overlay_detect_idle">Наложение не работает: включите хоть один виджет и выдайте разрешение на наложение.</string>
     <string name="overlay_detect_home">Открыт рабочий стол — панели на месте.</string>
+    <string name="overlay_detect_off">Прятки выключены переключателем: панели показываются поверх всего.</string>
+    <string name="overlay_detect_resumes">Последние выходы экранов (время · пакет · активность):</string>
+    <string name="overlay_detect_no_resumes">С начала показа ни один экран не выходил на передний план: журнал использования пуст, решение держится на списке задач.</string>
     <string name="overlay_hide_app">панели спрятаны: открыто %1$s</string>
     <string name="overlay_hide_applist">панели спрятаны: открыт список приложений</string>
     <string name="overlay_hide_ours">панели спрятаны: открыты настройки EX2 Widgets</string>

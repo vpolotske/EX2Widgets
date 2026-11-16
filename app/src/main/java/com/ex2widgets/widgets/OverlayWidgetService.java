@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,19 +35,14 @@ import java.util.List;
 public final class OverlayWidgetService extends Service {
 
     private static final long POLL_MS = 1000L;
-    /** Спрятанные панели: возврат на рабочий стол ждём реже, чем обновляем видимые. */
-    private static final long HIDDEN_POLL_MS = 3000L;
     private static final String ACTION_RESTART = "com.ex2widgets.overlay.RESTART";
 
     /** Тип события «экран вышел на передний план» для прежнего уровня API. */
     private static final int RESUMED_EVENT = 1;
-    /**
-     * Окно событий при первом опросе: за ним экран, который открыли до запуска
-     * службы, уже не виден, а шире — только лишний чтение журнала.
-     */
-    private static final long USAGE_FIRST_WINDOW_MS = 300_000L;
     /** Раз в десять секунд переспрашиваем, какой пакет теперь рабочий стол. */
     private static final long LAUNCHER_TTL_MS = 10_000L;
+    /** Сколько последних выходов экранов показывать в настройках. */
+    private static final int RESUME_LOG_SIZE = 5;
 
     /**
      * Макет EX2 HUB снимался с экрана 1768×1080, поэтому размеры и места в
@@ -59,6 +55,10 @@ public final class OverlayWidgetService extends Service {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<OverlaySpec> specs = new ArrayList<>();
+    /** Время выхода экрана — только для человекочитаемого журнала в настройках. */
+    private static final java.text.SimpleDateFormat RESUME_TIME =
+            new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US);
+    private final List<String> resumeLog = new ArrayList<>();
     public static volatile boolean running;
     private WindowManager windowManager;
     private volatile boolean destroyed;
@@ -68,8 +68,11 @@ public final class OverlayWidgetService extends Service {
     private String lastTopClass = "";
     /** До какого момента события использования уже прочитаны. */
     private long usageSince;
-    private String launcherCache = "";
-    private long launcherAt;
+    /** Все HOME-пакеты разом: победитель resolveActivity не всегда тот, что на экране. */
+    private java.util.Set<String> homeCache = java.util.Collections.emptySet();
+    private long homeAt;
+    /** Спрашиваем PackageManager, можно ли пакет запустить из списка приложений. */
+    private final java.util.Map<String, Boolean> launchableCache = new java.util.HashMap<>();
     /** Ошибку доступа к использованию пишем один раз: опрос идёт каждую секунду. */
     private boolean usageFailureLogged;
     /** То же про список задач: без доступа к использованию он спрашивается часто. */
@@ -84,6 +87,8 @@ public final class OverlayWidgetService extends Service {
     private static volatile boolean usageAvailable;
     /** Почему панели спрятаны сейчас; пусто — прятать нечего или причина неизвестна. */
     private static volatile String lastHideReason = "";
+    /** Последние выходы экранов со временем — по ним видно, что вранья нет. */
+    private static volatile String lastResumes = "";
 
     private final Runnable poll = new Runnable() {
         @Override
@@ -108,7 +113,6 @@ public final class OverlayWidgetService extends Service {
             lastThemeSignature = themeSignature;
             ForegroundState state = foregroundState();
             boolean anyEnabled = false;
-            boolean anyShown = false;
             for (OverlaySpec spec : specs) {
                 boolean enabled = Prefs.widgetEnabled(OverlayWidgetService.this, spec.key);
                 anyEnabled |= enabled;
@@ -118,7 +122,6 @@ public final class OverlayWidgetService extends Service {
                 if (show) {
                     ensure(spec);
                     update(spec);
-                    anyShown = true;
                 } else {
                     remove(spec);
                 }
@@ -127,10 +130,9 @@ public final class OverlayWidgetService extends Service {
                 stopSelf();
                 return;
             }
-            // Пока открыто чужое приложение, панели не нужны вовсе: опрос
-            // продолжается реже, и при возврате на рабочий стол они появятся
-            // через несколько секунд.
-            handler.postDelayed(this, anyShown ? POLL_MS : HIDDEN_POLL_MS);
+            // Один темп и в видимом, и в спрятанном состоянии: возврат на
+            // рабочий стол должен отрабатывать за ту же секунду, что и уход.
+            handler.postDelayed(this, POLL_MS);
         }
     };
 
@@ -401,11 +403,10 @@ public final class OverlayWidgetService extends Service {
     }
 
     /**
-     * Что сейчас у пользователя перед глазами. Единственный честный источник —
-     * события использования: ActivityManager.getRunningTasks на Android 8+
-     * отдаёт урезанный список, и на ГУ в нём весь день остаётся рабочий стол,
-     * даже когда открыто системное приложение (из-за него панели и висели
-     * поверх чужих экранов).
+     * Что сейчас у пользователя перед глазами. Прятаем панели по положительному
+     * признаку открытой программы: события использования описывают прошлый
+     * экран, а правило «раз не рабочий стол — прятать» на ГУ означает «панелей
+     * не видно никогда».
      */
     private ForegroundState foregroundState() {
         readUsageEvents();
@@ -420,23 +421,41 @@ public final class OverlayWidgetService extends Service {
             lastHideReason = "";
             return new ForegroundState(true);
         }
-        // Наши экраны (настройки) панелью перекрывать нельзя.
+        // Наши экраны (настройки) панелью перекрывать нельзя в любом режиме.
         if (pkg.equals(getPackageName())) {
             lastHideReason = getString(R.string.overlay_hide_ours);
             return new ForegroundState(false);
         }
-        boolean appList = WidgetModes.STOCK_LAUNCHER.equals(pkg)
-                && lastTopClass.contains("AppListActivity");
-        boolean onHome = !appList && isHome(pkg, launcherPackage());
-        lastHideReason = onHome ? "" : getString(appList
-                ? R.string.overlay_hide_applist : R.string.overlay_hide_app, appName(pkg));
-        return new ForegroundState(onHome);
+        if (!Prefs.hideBehindApps(this)) {
+            lastHideReason = "";
+            return new ForegroundState(true);
+        }
+        // Список приложений принадлежит пакету рабочего стола, но экраном
+        // человека он не является: панели закрыли бы половину значков.
+        if (WidgetModes.STOCK_LAUNCHER.equals(pkg) && lastTopClass.contains("AppListActivity")) {
+            lastHideReason = getString(R.string.overlay_hide_applist);
+            return new ForegroundState(false);
+        }
+        if (isHome(pkg)) {
+            lastHideReason = "";
+            return new ForegroundState(true);
+        }
+        // У экрана есть значок в списке приложений — значит это открытая
+        // человеком программа. Нет значка (SystemUI и служебные поверхности
+        // Flyme) — помешать панелям нечему, и мы их показываем.
+        if (!launchable(pkg)) {
+            lastHideReason = "";
+            return new ForegroundState(true);
+        }
+        lastHideReason = getString(R.string.overlay_hide_app, appName(pkg));
+        return new ForegroundState(false);
     }
 
     /**
-     * События использования с прошлого опроса. Водяной знак сдвигаем до самого
-     * запроса, а не до последней записи: иначе на неподвижном экране окно
-     * растёт, и каждый опрос читает всё больше событий.
+     * События использования с прошлого опроса. Окно начинается с запуска
+     * службы, а не с полу часа назад: прошлый экран уже закрыт, и прятать
+     * панели из-за него нельзя. Водяной знак сдвигаем до самого запроса, а не
+     * до последней записи: иначе на неподвижном экране окно растёт.
      */
     private boolean readUsageEvents() {
         try {
@@ -444,7 +463,7 @@ public final class OverlayWidgetService extends Service {
                     (android.app.usage.UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
             if (usm == null) return false;
             long now = System.currentTimeMillis();
-            long since = usageSince == 0L ? now - USAGE_FIRST_WINDOW_MS : usageSince;
+            long since = usageSince == 0L ? now : usageSince;
             usageSince = now;
             android.app.usage.UsageEvents events = usm.queryEvents(since, now);
             usageAvailable = true;
@@ -475,6 +494,25 @@ public final class OverlayWidgetService extends Service {
         if (pkg.isEmpty()) return;
         lastTopPackage = pkg;
         lastTopClass = event.getClassName() == null ? "" : event.getClassName();
+        rememberResume(event.getTimeStamp(), pkg, lastTopClass);
+    }
+
+    /** Последние выходы экранов: по ним настраивающий человек видит, что реально читает служба. */
+    private void rememberResume(long at, String pkg, String cls) {
+        String line = RESUME_TIME.format(new java.util.Date(at)) + " " + pkg
+                + (cls.isEmpty() ? "" : "/" + cls);
+        synchronized (resumeLog) {
+            if (resumeLog.isEmpty() || !resumeLog.get(resumeLog.size() - 1).equals(line)) {
+                resumeLog.add(line);
+                while (resumeLog.size() > RESUME_LOG_SIZE) resumeLog.remove(0);
+                StringBuilder text = new StringBuilder();
+                for (String item : resumeLog) {
+                    if (text.length() > 0) text.append("\n");
+                    text.append(item);
+                }
+                lastResumes = text.toString();
+            }
+        }
     }
 
     /** Запасной источник переднего экрана: список задач. */
@@ -502,12 +540,16 @@ public final class OverlayWidgetService extends Service {
 
     /** Новый экран или перезапуск: прежнее решение и прежнее окно событий ни при чём. */
     private void resetUsage() {
-        usageSince = 0L;
+        usageSince = System.currentTimeMillis();
         lastTopPackage = "";
         lastTopClass = "";
         lastTopSource = "";
         usageAvailable = false;
         lastHideReason = "";
+        synchronized (resumeLog) {
+            resumeLog.clear();
+            lastResumes = "";
+        }
     }
 
     /** Как назвать передний экран в строке состояния: имя приложения, а не пакет. */
@@ -522,22 +564,30 @@ public final class OverlayWidgetService extends Service {
         return pkg;
     }
 
-    /** Дом — это HOME; если он не разрешился, узнаём его по типовым именам пакетов. */
-    private boolean isHome(String pkg, String home) {
-        if (!home.isEmpty()) return home.equals(pkg);
-        return pkg.equals(WidgetModes.STOCK_LAUNCHER) || pkg.endsWith(".launcher")
+    /** Дом — любой из HOME-пакетов; типовые имена страхуют, если PackageManager молчит. */
+    private boolean isHome(String pkg) {
+        return homePackages().contains(pkg) || pkg.endsWith(".launcher")
                 || pkg.equals("com.miui.home");
     }
 
-    /** HOME разрешился один раз и протухает по времени, а не на каждый тик. */
-    private String launcherPackage() {
+    /** Список HOME протухает по времени, а не на каждый тик опроса. */
+    private java.util.Set<String> homePackages() {
         long now = System.currentTimeMillis();
-        if (launcherCache.isEmpty() || now - launcherAt > LAUNCHER_TTL_MS) {
-            launcherAt = now;
-            launcherCache = WidgetModes.launcherPackage(this);
-            lastHomePackage = launcherCache;
+        if (homeCache.isEmpty() || now - homeAt > LAUNCHER_TTL_MS) {
+            homeAt = now;
+            homeCache = WidgetModes.homePackages(this);
+            lastHomePackage = TextUtils.join(", ", homeCache);
         }
-        return launcherCache;
+        return homeCache;
+    }
+
+    /** Запускаемое ли приложение: ответPackageManager'а кэшируется на весь показ. */
+    private boolean launchable(String pkg) {
+        Boolean known = launchableCache.get(pkg);
+        if (known != null) return known;
+        boolean value = WidgetModes.launchable(this, pkg);
+        launchableCache.put(pkg, value);
+        return value;
     }
 
     /** Пакет, который служба считает передним экраном; пусто — не определён. */
@@ -558,6 +608,11 @@ public final class OverlayWidgetService extends Service {
     /** Почему панели сейчас спрятаны; пусто — на рабочем столе или определение молчит. */
     public static String hideReason() {
         return lastHideReason;
+    }
+
+    /** Последние выходы экранов, которые прочитала служба: по ним видно, чем она живёт. */
+    public static String resumesLog() {
+        return lastResumes;
     }
 
     /**

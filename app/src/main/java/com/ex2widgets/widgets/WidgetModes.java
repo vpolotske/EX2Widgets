@@ -60,6 +60,47 @@ public final class WidgetModes {
         return "";
     }
 
+    /**
+     * Все пакеты, которые отзываются на HOME. На ГУ их обычно несколько
+     * (штатный экран, CarPlay-обвязка, резервный лаунчер), и тот, что реально
+     * виден пользователю, не обязательно победитель `resolveActivity`.
+     */
+    public static java.util.Set<String> homePackages(Context c) {
+        java.util.Set<String> packages = new java.util.HashSet<>();
+        packages.add(STOCK_LAUNCHER);
+        try {
+            java.util.List<ResolveInfo> all = c.getPackageManager().queryIntentActivities(
+                    new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0);
+            if (all != null) {
+                for (ResolveInfo info : all) {
+                    if (info != null && info.activityInfo != null
+                            && info.activityInfo.packageName != null) {
+                        packages.add(info.activityInfo.packageName);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return packages;
+    }
+
+    /**
+     * Есть ли у пакета значок в списке приложений. Это положительный признак
+     * «пользователь открыл программу»: без него панель прячется по любому
+     * системному экрану, которого человек не видел.
+     */
+    public static boolean launchable(Context c, String pkg) {
+        if (pkg == null || pkg.isEmpty()) return false;
+        try {
+            java.util.List<ResolveInfo> all = c.getPackageManager().queryIntentActivities(
+                    new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+                            .setPackage(pkg), 0);
+            return all != null && !all.isEmpty();
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public static boolean isStockLauncher(Context c) {
         return STOCK_LAUNCHER.equals(launcherPackage(c));
     }

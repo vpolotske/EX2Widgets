@@ -11,8 +11,8 @@ android {
         applicationId 'com.ex2widgets'
         minSdk 28
         targetSdk 29
-        versionCode 3
-        versionName '1.0.2'
+        versionCode 4
+        versionName '1.0.3'
         resConfigs 'ru'
     }
 

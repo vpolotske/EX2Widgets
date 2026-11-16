@@ -43,6 +43,17 @@ public final class MainActivity extends Activity {
     private TextView permissionHint;
     private TextView detectStatus;
     private TextView detectHint;
+    private TextView detectLog;
+    private Switch hideBehind;
+    /** Живое обновление строк определения: без него не увидеть, что менялось, пока открыт экран. */
+    private final android.os.Handler detectTick = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable detectLoop = new Runnable() {
+        @Override
+        public void run() {
+            refreshDetection();
+            detectTick.postDelayed(this, 1000L);
+        }
+    };
     private TextView globalAlphaValue;
     private SeekBar globalAlphaSeek;
     /** Экран разрешений, который реально открылся, — им же и отвечаем на «не открылся». */
@@ -58,6 +69,8 @@ public final class MainActivity extends Activity {
         permissionHint = findViewById(R.id.permissionHint);
         detectStatus = findViewById(R.id.detectStatus);
         detectHint = findViewById(R.id.detectHint);
+        detectLog = findViewById(R.id.detectLog);
+        hideBehind = findViewById(R.id.hideBehind);
         globalAlphaValue = findViewById(R.id.globalAlphaValue);
         globalAlphaSeek = findViewById(R.id.globalAlphaSeek);
 
@@ -76,6 +89,11 @@ public final class MainActivity extends Activity {
         findViewById(R.id.overlayPermission).setOnClickListener(v -> requestOverlayPermission());
         findViewById(R.id.usagePermission).setOnClickListener(v -> requestUsageAccess());
         findViewById(R.id.detectCheck).setOnClickListener(v -> checkForegroundDetection());
+        hideBehind.setOnCheckedChangeListener((button, checked) -> {
+            Prefs.setHideBehindApps(MainActivity.this, checked);
+            OverlayWidgetService.restart(MainActivity.this);
+            LogStore.add(this, "hide behind apps: " + checked);
+        });
 
         globalAlphaSeek.setMax(100);
         globalAlphaSeek.setOnSeekBarChangeListener(new SeekCommit() {
@@ -109,6 +127,13 @@ public final class MainActivity extends Activity {
         // не узнает сама, пусть проверит сразу.
         OverlayWidgetService.sync(this);
         refresh();
+        detectTick.post(detectLoop);
+    }
+
+    @Override
+    protected void onPause() {
+        detectTick.removeCallbacks(detectLoop);
+        super.onPause();
     }
 
     private void refresh() {
@@ -184,9 +209,12 @@ public final class MainActivity extends Activity {
      * определить открытое приложение нечем.
      */
     private void refreshDetection() {
+        boolean hide = Prefs.hideBehindApps(this);
+        if (hideBehind.isChecked() != hide) hideBehind.setChecked(hide);
         if (!OverlayWidgetService.isRunning()) {
             detectStatus.setText(R.string.overlay_detect_idle);
             detectHint.setVisibility(View.GONE);
+            detectLog.setVisibility(View.GONE);
             return;
         }
         // Доступ считаем выданным, если его подтверждает хотя бы один источник:
@@ -204,8 +232,17 @@ public final class MainActivity extends Activity {
                 top.isEmpty() ? "?" : top,
                 home.isEmpty() ? "?" : home,
                 sourceLabel(OverlayWidgetService.detectionSource()))).append("\n");
-        text.append(reason.isEmpty() ? getString(R.string.overlay_detect_home) : reason);
+        if (!hide) {
+            text.append(getString(R.string.overlay_detect_off));
+        } else {
+            text.append(reason.isEmpty() ? getString(R.string.overlay_detect_home) : reason);
+        }
         detectStatus.setText(text.toString());
+        String resumes = OverlayWidgetService.resumesLog();
+        detectLog.setVisibility(View.VISIBLE);
+        detectLog.setText(resumes.isEmpty()
+                ? getString(R.string.overlay_detect_no_resumes)
+                : getString(R.string.overlay_detect_resumes) + "\n" + resumes);
         detectHint.setVisibility(granted ? View.GONE : View.VISIBLE);
         if (!granted) {
             detectHint.setText(getString(R.string.settings_usage_manual, getPackageName()));
