@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_name_hub_regen"
+    android:initialLayout="@layout/widget_hub_regen"
+    android:minHeight="186dp"
+    android:minResizeHeight="150dp"
+    android:minResizeWidth="360dp"
+    android:minWidth="507dp"
+    android:previewLayout="@layout/widget_hub_regen"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="3"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

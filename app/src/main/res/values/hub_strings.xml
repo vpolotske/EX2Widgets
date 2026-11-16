@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Подписи виджетов: те же слова, что звучат на рабочем столе EX2 HUB. -->
+<resources>
+    <!-- Имена в списке виджетов и в настройках приложения. -->
+    <string name="widget_name_hub_climate">EX2 · Климат</string>
+    <string name="widget_name_hub_drive">EX2 · Режим движения</string>
+    <string name="widget_name_hub_regen">EX2 · Рекуперация</string>
+    <string name="widget_name_hub_outside_temp">EX2 · Наружный воздух</string>
+    <string name="widget_name_hub_windows">EX2 · Стёкла</string>
+    <string name="widget_name_hub_frunk">EX2 · Передний багажник</string>
+
+    <string name="hub_climate_title">Климат</string>
+    <string name="hub_power_on">Вкл</string>
+    <string name="hub_power_off">Выкл</string>
+    <string name="hub_power_desc">Питание климата</string>
+    <string name="hub_dash">—</string>
+    <string name="hub_colder">Холоднее</string>
+    <string name="hub_warmer">Теплее</string>
+    <string name="hub_fan_less">Меньше обдув</string>
+    <string name="hub_fan_more">Больше обдув</string>
+
+    <string name="hub_label_interior">САЛОН</string>
+    <string name="hub_label_fan">ВЕНТИЛЯТОР</string>
+    <string name="hub_label_direction">НАПРАВЛЕНИЕ ВОЗДУХА</string>
+    <string name="hub_label_heat">ОБОГРЕВ</string>
+
+    <string name="hub_dir_glass">Лобовое стекло</string>
+    <string name="hub_dir_face">В лицо</string>
+    <string name="hub_dir_feet">В ноги</string>
+    <string name="hub_dir_face_feet">В лицо и ноги</string>
+    <string name="hub_dir_glass_feet">Стекло и ноги</string>
+
+    <string name="hub_preset_cool">Быстрое охлаждение</string>
+    <string name="hub_preset_heat">Быстрый обогрев</string>
+    <string name="hub_ac">Кондиционер</string>
+
+    <string name="hub_seat_driver">Водитель</string>
+    <string name="hub_seat_passenger">Пассажир</string>
+    <string name="hub_wheel">Руль</string>
+    <string name="hub_glass_front">Лобовое стекло</string>
+    <string name="hub_glass_rear">Заднее стекло</string>
+
+    <string name="hub_drive_title">Режим движения</string>
+    <string name="hub_regen_title">Рекуперация</string>
+    <string name="hub_drive_eco">Эко</string>
+    <string name="hub_drive_comfort">Комфорт</string>
+    <string name="hub_drive_sport">Спорт</string>
+    <string name="hub_regen_low">Слабая</string>
+    <string name="hub_regen_mid">Средняя</string>
+    <string name="hub_regen_high">Сильная</string>
+
+    <string name="hub_outside_title">Снаружи</string>
+    <string name="hub_windows_title">Стёкла</string>
+    <string name="hub_window_fl">Левое переднее</string>
+    <string name="hub_window_fr">Правое переднее</string>
+    <string name="hub_window_rl">Левое заднее</string>
+    <string name="hub_window_rr">Правое заднее</string>
+    <string name="hub_windows_open_all">Открыть все</string>
+    <string name="hub_windows_close_all">Закрыть все</string>
+    <string name="hub_windows_all_closed">Все закрыты</string>
+    <string name="hub_windows_open_count">Открыто: %1$d</string>
+    <string name="hub_windows_no_data">Нет данных</string>
+
+    <string name="hub_frunk_title">Передний багажник</string>
+    <string name="hub_frunk_open">Открыть</string>
+    <string name="hub_frunk_closed">Закрыт</string>
+    <string name="hub_frunk_is_open">Открыт</string>
+    <string name="hub_frunk_requested">Запрос отправлен</string>
+    <string name="hub_frunk_only_park">Доступно в P</string>
+    <string name="hub_frunk_no_car">Нет связи с авто</string>
+</resources>

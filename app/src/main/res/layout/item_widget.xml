@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Блок одного виджета: показ наложением, размер, прозрачность и положение. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="14dp"
+    android:background="@drawable/hub_card_100"
+    android:orientation="vertical"
+    android:padding="22dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/widgetName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="@color/hub_title"
+            android:textSize="22sp" />
+
+        <Switch
+            android:id="@+id/widgetShow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_show_overlay"
+            android:textColor="@color/hub_label"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widgetStatus"
+        style="@style/SettingsText"
+        android:layout_marginTop="4dp" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="14dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/SettingsSection"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/settings_size" />
+
+        <TextView
+            android:id="@+id/widgetSizeValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/hub_value"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+    <SeekBar
+        android:id="@+id/widgetSizeSeek"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:max="150" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/SettingsSection"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/settings_opacity" />
+
+        <TextView
+            android:id="@+id/widgetAlphaValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/hub_value"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+    <SeekBar
+        android:id="@+id/widgetAlphaSeek"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:max="100" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/widgetResetPosition"
+            style="@style/SettingsControl"
+            android:text="@string/settings_reset_position" />
+
+        <Space
+            android:layout_width="12dp"
+            android:layout_height="1dp" />
+
+        <Button
+            android:id="@+id/widgetPin"
+            style="@style/SettingsControl"
+            android:text="@string/settings_pin" />
+    </LinearLayout>
+</LinearLayout>

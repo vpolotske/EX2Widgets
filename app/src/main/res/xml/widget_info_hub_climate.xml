@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_name_hub_climate"
+    android:initialLayout="@layout/widget_hub_climate"
+    android:minHeight="1001dp"
+    android:minResizeHeight="700dp"
+    android:minResizeWidth="480dp"
+    android:minWidth="656dp"
+    android:previewLayout="@layout/widget_hub_climate"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="6"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

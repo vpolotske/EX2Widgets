@@ -1,0 +1,827 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Панель климата один-в-один с рабочим столом EX2 HUB (HomeScreen.ClimatePanel).
+  Все размеры — пиксели макета: плотность ГУ равна 1,0, поэтому 1 dp = 1 px.
+  Разметка намеренно из классов, которые разрешены и в RemoteViews, и в обычном
+  inflation: один и тот же файл служит и виджету, и наложению.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_bg_layer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/hub_card_100"
+    android:paddingHorizontal="28.1dp"
+    android:paddingVertical="25.3dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Заголовок: вентилятор, подпись и тумблер питания климата. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/hub_head_icon"
+                android:layout_width="49.2dp"
+                android:layout_height="49.2dp"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_hub_fan"
+                android:tint="@color/hub_icon" />
+
+            <Space
+                android:layout_width="14.1dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:letterSpacing="-0.008"
+                android:maxLines="1"
+                android:text="@string/hub_climate_title"
+                android:textColor="@color/hub_title"
+                android:textSize="37.3sp"
+                android:textStyle="normal"
+                android:fontFamily="sans-serif-medium" />
+
+            <LinearLayout
+                android:id="@+id/hub_power"
+                android:layout_width="wrap_content"
+                android:layout_height="64.7dp"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:minWidth="182.7dp"
+                android:orientation="horizontal"
+                android:paddingHorizontal="28.1dp">
+
+                <TextView
+                    android:id="@+id/hub_power_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/hub_power_off"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="26.7sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="43.6dp" />
+
+        <!-- Уставка: шаг в целый градус, как кнопки «холоднее/теплее». -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/temp_minus"
+                android:layout_width="84.3dp"
+                android:layout_height="84.3dp"
+                android:background="@drawable/hub_control_circle">
+
+                <ImageView
+                    android:id="@+id/temp_minus_icon"
+                    android:layout_width="38.65dp"
+                    android:layout_height="38.65dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_colder"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_minus"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/temp_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="-0.009"
+                    android:maxLines="1"
+                    android:text="@string/hub_dash"
+                    android:textColor="@color/hub_value"
+                    android:textSize="151.8sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.146"
+                    android:maxLines="1"
+                    android:text="@string/hub_label_interior"
+                    android:textColor="@color/hub_label"
+                    android:textSize="21.1sp" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/temp_plus"
+                android:layout_width="84.3dp"
+                android:layout_height="84.3dp"
+                android:background="@drawable/hub_control_circle">
+
+                <ImageView
+                    android:id="@+id/temp_plus_icon"
+                    android:layout_width="38.65dp"
+                    android:layout_height="38.65dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_warmer"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_plus"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="19.7dp" />
+
+        <!-- Ступень вентилятора: маленькая кнопка — маленький вентилятор. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/fan_minus"
+                android:layout_width="84.3dp"
+                android:layout_height="84.3dp"
+                android:background="@drawable/hub_control_circle">
+
+                <ImageView
+                    android:id="@+id/fan_minus_icon"
+                    android:layout_width="31dp"
+                    android:layout_height="31dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_fan_less"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_fan"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+
+            <Space
+                android:layout_width="19.7dp"
+                android:layout_height="1dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="bottom"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.138"
+                        android:maxLines="1"
+                        android:text="@string/hub_label_fan"
+                        android:textColor="@color/hub_label"
+                        android:textSize="20.4sp" />
+
+                    <TextView
+                        android:id="@+id/fan_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:text="@string/hub_dash"
+                        android:textColor="@color/hub_value"
+                        android:textSize="22.5sp" />
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="5.6dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="28.1dp"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/fan_bar_1"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+
+                    <View
+                        android:id="@+id/fan_bar_2"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_marginStart="9.8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+
+                    <View
+                        android:id="@+id/fan_bar_3"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_marginStart="9.8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+
+                    <View
+                        android:id="@+id/fan_bar_4"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_marginStart="9.8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+
+                    <View
+                        android:id="@+id/fan_bar_5"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_marginStart="9.8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+
+                    <View
+                        android:id="@+id/fan_bar_6"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_marginStart="9.8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+
+                    <View
+                        android:id="@+id/fan_bar_7"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_marginStart="9.8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+
+                    <View
+                        android:id="@+id/fan_bar_8"
+                        android:layout_width="0dp"
+                        android:layout_height="28.1dp"
+                        android:layout_marginStart="9.8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/hub_bar_off" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <Space
+                android:layout_width="19.7dp"
+                android:layout_height="1dp" />
+
+            <FrameLayout
+                android:id="@+id/fan_plus"
+                android:layout_width="84.3dp"
+                android:layout_height="84.3dp"
+                android:background="@drawable/hub_control_circle">
+
+                <ImageView
+                    android:id="@+id/fan_plus_icon"
+                    android:layout_width="47.8dp"
+                    android:layout_height="47.8dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_fan_more"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_fan"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="25.3dp" />
+
+        <!-- Направление обдува: четыре маски автомобиля. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="21.1dp"
+                android:layout_height="21.1dp"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_hub_airflow"
+                android:tint="@color/hub_icon" />
+
+            <Space
+                android:layout_width="9.8dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.118"
+                android:maxLines="1"
+                android:text="@string/hub_label_direction"
+                android:textColor="@color/hub_label"
+                android:textSize="19sp" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="14.1dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="70.3dp"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/dir_glass"
+                android:layout_width="0dp"
+                android:layout_height="70.3dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control">
+
+                <ImageView
+                    android:id="@+id/dir_glass_icon"
+                    android:layout_width="53.4dp"
+                    android:layout_height="53.4dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_dir_glass"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_air_glass"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/dir_face"
+                android:layout_width="0dp"
+                android:layout_height="70.3dp"
+                android:layout_marginStart="12.6dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control">
+
+                <ImageView
+                    android:id="@+id/dir_face_icon"
+                    android:layout_width="53.4dp"
+                    android:layout_height="53.4dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_dir_face"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_air_face"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/dir_feet"
+                android:layout_width="0dp"
+                android:layout_height="70.3dp"
+                android:layout_marginStart="12.6dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control">
+
+                <ImageView
+                    android:id="@+id/dir_feet_icon"
+                    android:layout_width="53.4dp"
+                    android:layout_height="53.4dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_dir_feet"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_air_feet"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/dir_face_feet"
+                android:layout_width="0dp"
+                android:layout_height="70.3dp"
+                android:layout_marginStart="12.6dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control">
+
+                <ImageView
+                    android:id="@+id/dir_face_feet_icon"
+                    android:layout_width="53.4dp"
+                    android:layout_height="53.4dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_dir_face_feet"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_air_face_feet"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/dir_glass_feet"
+                android:layout_width="0dp"
+                android:layout_height="70.3dp"
+                android:layout_marginStart="12.6dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control">
+
+                <ImageView
+                    android:id="@+id/dir_glass_feet_icon"
+                    android:layout_width="53.4dp"
+                    android:layout_height="53.4dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/hub_dir_glass_feet"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_air_glass_feet"
+                    android:tint="@color/hub_icon" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="23.9dp" />
+
+        <!-- Быстрые режимы и кондиционер. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="70.3dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/preset_cool"
+                android:layout_width="0dp"
+                android:layout_height="70.3dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14.1dp">
+
+                <ImageView
+                    android:id="@+id/preset_cool_icon"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_snowflake"
+                    android:tint="@color/hub_icon" />
+
+                <Space
+                    android:layout_width="12.6dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    android:id="@+id/preset_cool_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_preset_cool"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="19sp" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/ac_tile"
+                android:layout_width="90dp"
+                android:layout_height="70.3dp"
+                android:layout_marginStart="14.1dp"
+                android:background="@drawable/hub_control">
+
+                <TextView
+                    android:id="@+id/ac_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:maxLines="1"
+                    android:text="@string/hub_ac"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="23.9sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/preset_heat"
+                android:layout_width="0dp"
+                android:layout_height="70.3dp"
+                android:layout_marginStart="14.1dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14.1dp">
+
+                <ImageView
+                    android:id="@+id/preset_heat_icon"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_heat"
+                    android:tint="@color/hub_icon" />
+
+                <Space
+                    android:layout_width="12.6dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    android:id="@+id/preset_heat_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_preset_heat"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="19sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="35.1dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.138"
+            android:maxLines="1"
+            android:text="@string/hub_label_heat"
+            android:textColor="@color/hub_label"
+            android:textSize="20.4sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="9.8dp" />
+
+        <!-- Обогревы: ступень видна числом волн, у руля ступень одна. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="118.1dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/heat_driver"
+                android:layout_width="0dp"
+                android:layout_height="118.1dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/heat_driver_icon"
+                        android:layout_width="64.7dp"
+                        android:layout_height="64.7dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_hub_seat"
+                        android:tint="@color/hub_icon" />
+
+                    <ImageView
+                        android:id="@+id/heat_driver_wave_1"
+                        android:layout_width="15.4dp"
+                        android:layout_height="60.9dp"
+                        android:layout_marginStart="5dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_hub_heat_wave"
+                        android:tint="@color/hub_icon" />
+
+                    <ImageView
+                        android:id="@+id/heat_driver_wave_2"
+                        android:layout_width="15.4dp"
+                        android:layout_height="60.9dp"
+                        android:layout_marginStart="5dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_hub_heat_wave"
+                        android:tint="@color/hub_icon" />
+
+                    <ImageView
+                        android:id="@+id/heat_driver_wave_3"
+                        android:layout_width="15.4dp"
+                        android:layout_height="60.9dp"
+                        android:layout_marginStart="5dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_hub_heat_wave"
+                        android:tint="@color/hub_icon" />
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="1dp"
+                    android:layout_height="9.8dp" />
+
+                <TextView
+                    android:id="@+id/heat_driver_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/hub_seat_driver"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="20.4sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/heat_wheel"
+                android:layout_width="0dp"
+                android:layout_height="118.1dp"
+                android:layout_marginStart="16.9dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/heat_wheel_icon"
+                    android:layout_width="64.7dp"
+                    android:layout_height="64.7dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_wheel"
+                    android:tint="@color/hub_icon" />
+
+                <Space
+                    android:layout_width="1dp"
+                    android:layout_height="9.8dp" />
+
+                <TextView
+                    android:id="@+id/heat_wheel_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/hub_wheel"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="20.4sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/heat_passenger"
+                android:layout_width="0dp"
+                android:layout_height="118.1dp"
+                android:layout_marginStart="16.9dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/heat_passenger_icon"
+                        android:layout_width="64.7dp"
+                        android:layout_height="64.7dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_hub_seat_passenger"
+                        android:tint="@color/hub_icon" />
+
+                    <ImageView
+                        android:id="@+id/heat_passenger_wave_1"
+                        android:layout_width="15.4dp"
+                        android:layout_height="60.9dp"
+                        android:layout_marginStart="5dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_hub_heat_wave"
+                        android:tint="@color/hub_icon" />
+
+                    <ImageView
+                        android:id="@+id/heat_passenger_wave_2"
+                        android:layout_width="15.4dp"
+                        android:layout_height="60.9dp"
+                        android:layout_marginStart="5dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_hub_heat_wave"
+                        android:tint="@color/hub_icon" />
+
+                    <ImageView
+                        android:id="@+id/heat_passenger_wave_3"
+                        android:layout_width="15.4dp"
+                        android:layout_height="60.9dp"
+                        android:layout_marginStart="5dp"
+                        android:contentDescription="@null"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_hub_heat_wave"
+                        android:tint="@color/hub_icon" />
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="1dp"
+                    android:layout_height="9.8dp" />
+
+                <TextView
+                    android:id="@+id/heat_passenger_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/hub_seat_passenger"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="20.4sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="23.9dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="75.9dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/glass_front"
+                android:layout_width="0dp"
+                android:layout_height="75.9dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14.1dp">
+
+                <ImageView
+                    android:id="@+id/glass_front_icon"
+                    android:layout_width="50.6dp"
+                    android:layout_height="50.6dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_defrost"
+                    android:tint="@color/hub_icon" />
+
+                <Space
+                    android:layout_width="12.6dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    android:id="@+id/glass_front_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_glass_front"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="23.9sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/glass_rear"
+                android:layout_width="0dp"
+                android:layout_height="75.9dp"
+                android:layout_marginStart="14.1dp"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14.1dp">
+
+                <ImageView
+                    android:id="@+id/glass_rear_icon"
+                    android:layout_width="50.6dp"
+                    android:layout_height="50.6dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_rear_defrost"
+                    android:tint="@color/hub_icon" />
+
+                <Space
+                    android:layout_width="12.6dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    android:id="@+id/glass_rear_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_glass_rear"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="23.9sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

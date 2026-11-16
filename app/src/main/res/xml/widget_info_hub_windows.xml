@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_name_hub_windows"
+    android:initialLayout="@layout/widget_hub_windows"
+    android:minHeight="460dp"
+    android:minResizeHeight="360dp"
+    android:minResizeWidth="520dp"
+    android:minWidth="660dp"
+    android:previewLayout="@layout/widget_hub_windows"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="3"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

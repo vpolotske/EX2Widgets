@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Экран настроек живёт в той же палитре, что и виджеты. -->
+    <style name="Theme.EX2Widgets" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/screen_bg</item>
+        <item name="android:colorBackground">@color/screen_bg</item>
+        <item name="android:statusBarColor">@color/screen_bg</item>
+        <item name="android:navigationBarColor">@color/screen_bg</item>
+        <item name="android:colorAccent">@color/hub_accent</item>
+        <item name="android:textColorPrimary">@color/hub_title</item>
+        <item name="android:textColorSecondary">@color/hub_label</item>
+    </style>
+
+    <style name="SettingsTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/hub_title</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="SettingsSection">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/hub_label</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="SettingsText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/hub_dim</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <style name="SettingsControl" parent="android:Widget.DeviceDefault.Button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:paddingHorizontal">18dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/hub_control_on_text</item>
+        <item name="android:background">@drawable/hub_control</item>
+    </style>
+</resources>

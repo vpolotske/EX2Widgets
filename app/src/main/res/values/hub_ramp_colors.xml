@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Фон виджета по ползунку прозрачности с шагом 5 % : те же цвет и рамка, только alpha. -->
+<resources>
+    <color name="hub_card_bg_000">#00071B36</color>
+    <color name="hub_card_bg_005">#0D071B36</color>
+    <color name="hub_card_bg_010">#1A071B36</color>
+    <color name="hub_card_bg_015">#26071B36</color>
+    <color name="hub_card_bg_020">#33071B36</color>
+    <color name="hub_card_bg_025">#40071B36</color>
+    <color name="hub_card_bg_030">#4D071B36</color>
+    <color name="hub_card_bg_035">#59071B36</color>
+    <color name="hub_card_bg_040">#66071B36</color>
+    <color name="hub_card_bg_045">#73071B36</color>
+    <color name="hub_card_bg_050">#80071B36</color>
+    <color name="hub_card_bg_055">#8C071B36</color>
+    <color name="hub_card_bg_060">#99071B36</color>
+    <color name="hub_card_bg_065">#A6071B36</color>
+    <color name="hub_card_bg_070">#B3071B36</color>
+    <color name="hub_card_bg_075">#BF071B36</color>
+    <color name="hub_card_bg_080">#CC071B36</color>
+    <color name="hub_card_bg_085">#D9071B36</color>
+    <color name="hub_card_bg_090">#E6071B36</color>
+    <color name="hub_card_bg_095">#F2071B36</color>
+    <color name="hub_card_bg_100">#FF071B36</color>
+    <color name="hub_card_border_000">#00153760</color>
+    <color name="hub_card_border_005">#0D153760</color>
+    <color name="hub_card_border_010">#1A153760</color>
+    <color name="hub_card_border_015">#26153760</color>
+    <color name="hub_card_border_020">#33153760</color>
+    <color name="hub_card_border_025">#40153760</color>
+    <color name="hub_card_border_030">#4D153760</color>
+    <color name="hub_card_border_035">#59153760</color>
+    <color name="hub_card_border_040">#66153760</color>
+    <color name="hub_card_border_045">#73153760</color>
+    <color name="hub_card_border_050">#80153760</color>
+    <color name="hub_card_border_055">#8C153760</color>
+    <color name="hub_card_border_060">#99153760</color>
+    <color name="hub_card_border_065">#A6153760</color>
+    <color name="hub_card_border_070">#B3153760</color>
+    <color name="hub_card_border_075">#BF153760</color>
+    <color name="hub_card_border_080">#CC153760</color>
+    <color name="hub_card_border_085">#D9153760</color>
+    <color name="hub_card_border_090">#E6153760</color>
+    <color name="hub_card_border_095">#F2153760</color>
+    <color name="hub_card_border_100">#FF153760</color>
+</resources>

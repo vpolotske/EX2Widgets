@@ -1,0 +1,14 @@
+<!-- Полоса обогрева: в макете узкий viewBox 6.4×36 с растягиванием,
+     поэтому в виджете ей задают 15.4×60.9dp и scaleType=fitXY. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="6.4dp"
+    android:height="36dp"
+    android:viewportWidth="6.4"
+    android:viewportHeight="36">
+    <path
+        android:pathData="M3.2 3C0.9 8.2 0.9 12.8 3.2 18C5.5 23.2 5.5 27.8 3.2 33"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

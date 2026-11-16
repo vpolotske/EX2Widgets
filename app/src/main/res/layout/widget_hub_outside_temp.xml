@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Карточка наружного воздуха. Размеры — пиксели макета 1768x1080: плотность ГУ
+  равна 1,0, поэтому 1 dp = 1 px. Классы только те, что разрешены RemoteViews.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_bg_layer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/hub_card_100"
+    android:paddingHorizontal="21.1dp"
+    android:paddingVertical="18.3dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="46.4dp"
+            android:layout_height="46.4dp"
+            android:contentDescription="@string/hub_outside_title"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_hub_temp_out"
+            android:tint="@color/hub_icon" />
+
+        <Space
+            android:layout_width="16.9dp"
+            android:layout_height="1dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.14"
+                android:maxLines="1"
+                android:text="@string/hub_outside_title"
+                android:textAllCaps="true"
+                android:textColor="@color/hub_label"
+                android:textSize="15.5sp" />
+
+            <TextView
+                android:id="@+id/temp_out_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:text="@string/hub_dash"
+                android:textColor="@color/hub_value"
+                android:textSize="46.4sp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

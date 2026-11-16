@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Экран настроек: режим показа, общая прозрачность и блоки по каждому виджету. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/screen_bg"
+    android:fillViewport="true"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="28dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="40dp">
+
+        <TextView
+            style="@style/SettingsTitle"
+            android:text="@string/app_name" />
+
+        <TextView
+            style="@style/SettingsText"
+            android:layout_marginTop="6dp"
+            android:text="@string/settings_subtitle" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="22dp" />
+
+        <!-- Как показывать виджеты: наложение или виджет рабочего экрана. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/hub_card_100"
+            android:orientation="vertical"
+            android:padding="22dp">
+
+            <TextView
+                style="@style/SettingsSection"
+                android:text="@string/settings_mode" />
+
+            <TextView
+                android:id="@+id/modeStatus"
+                style="@style/SettingsText"
+                android:layout_marginTop="10dp"
+                android:text="@string/settings_loading" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="14dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/modeAuto"
+                    style="@style/SettingsControl"
+                    android:text="@string/settings_mode_auto" />
+
+                <Space
+                    android:layout_width="12dp"
+                    android:layout_height="1dp" />
+
+                <Button
+                    android:id="@+id/modeOverlay"
+                    style="@style/SettingsControl"
+                    android:text="@string/settings_mode_overlay" />
+
+                <Space
+                    android:layout_width="12dp"
+                    android:layout_height="1dp" />
+
+                <Button
+                    android:id="@+id/modeWidget"
+                    style="@style/SettingsControl"
+                    android:text="@string/settings_mode_widget" />
+
+                <Space
+                    android:layout_width="12dp"
+                    android:layout_height="1dp" />
+
+                <Button
+                    android:id="@+id/overlayPermission"
+                    style="@style/SettingsControl"
+                    android:text="@string/settings_overlay_permission" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="18dp" />
+
+        <!-- Общая прозрачность: умножается на прозрачность каждого виджета. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/hub_card_100"
+            android:orientation="vertical"
+            android:padding="22dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/SettingsSection"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_opacity_global" />
+
+                <TextView
+                    android:id="@+id/globalAlphaValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_loading"
+                    android:textColor="@color/hub_value"
+                    android:textSize="20sp" />
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/globalAlphaSeek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:max="100" />
+
+            <TextView
+                style="@style/SettingsText"
+                android:text="@string/settings_opacity_note" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="18dp" />
+
+        <!-- По одному блоку на виджет: показ, размер, прозрачность, положение. -->
+        <LinearLayout
+            android:id="@+id/widgetsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="18dp" />
+
+        <TextView
+            style="@style/SettingsText"
+            android:text="@string/settings_add_hint" />
+    </LinearLayout>
+</ScrollView>

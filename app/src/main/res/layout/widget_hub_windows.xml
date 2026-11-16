@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Управление стёклами: четыре плитки по дверям и две команды на весь салон.
+  Плитка показывает, насколько стекло опущено, и переключает его по тапу.
+  Плитки не вынесены в include: RemoteViews ищет поля по идентификатору, и у
+  каждой плитки он должен быть своим.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_bg_layer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/hub_card_100"
+    android:paddingHorizontal="24dp"
+    android:paddingVertical="21.1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@string/hub_windows_title"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_hub_window"
+                android:tint="@color/hub_icon" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.114"
+                android:maxLines="1"
+                android:text="@string/hub_windows_title"
+                android:textAllCaps="true"
+                android:textColor="@color/hub_title"
+                android:textSize="19.7sp" />
+
+            <TextView
+                android:id="@+id/windows_summary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:maxLines="1"
+                android:text="@string/hub_dash"
+                android:textColor="@color/hub_dim"
+                android:textSize="15.5sp" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="16.9dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/win_fl"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/win_fl_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_window_fl"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="16.5sp" />
+
+                <Space
+                    android:layout_width="1dp"
+                    android:layout_height="8.4dp" />
+
+                <TextView
+                    android:id="@+id/win_fl_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:text="@string/hub_dash"
+                    android:textColor="@color/hub_value"
+                    android:textSize="28.1sp" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="12.6dp"
+                android:layout_height="1dp" />
+
+            <LinearLayout
+                android:id="@+id/win_fr"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/win_fr_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_window_fr"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="16.5sp" />
+
+                <Space
+                    android:layout_width="1dp"
+                    android:layout_height="8.4dp" />
+
+                <TextView
+                    android:id="@+id/win_fr_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:text="@string/hub_dash"
+                    android:textColor="@color/hub_value"
+                    android:textSize="28.1sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="12.6dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/win_rl"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/win_rl_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_window_rl"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="16.5sp" />
+
+                <Space
+                    android:layout_width="1dp"
+                    android:layout_height="8.4dp" />
+
+                <TextView
+                    android:id="@+id/win_rl_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:text="@string/hub_dash"
+                    android:textColor="@color/hub_value"
+                    android:textSize="28.1sp" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="12.6dp"
+                android:layout_height="1dp" />
+
+            <LinearLayout
+                android:id="@+id/win_rr"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/win_rr_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/hub_window_rr"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="16.5sp" />
+
+                <Space
+                    android:layout_width="1dp"
+                    android:layout_height="8.4dp" />
+
+                <TextView
+                    android:id="@+id/win_rr_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:text="@string/hub_dash"
+                    android:textColor="@color/hub_value"
+                    android:textSize="28.1sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="12.6dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="76dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/win_open_all"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/win_open_all_icon"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:contentDescription="@string/hub_windows_open_all"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_window_down"
+                    android:tint="@color/hub_icon" />
+
+                <Space
+                    android:layout_width="11.2dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    android:id="@+id/win_open_all_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/hub_windows_open_all"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="19.7sp" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="12.6dp"
+                android:layout_height="1dp" />
+
+            <LinearLayout
+                android:id="@+id/win_close_all"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/hub_control"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/win_close_all_icon"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:contentDescription="@string/hub_windows_close_all"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_hub_window_up"
+                    android:tint="@color/hub_icon" />
+
+                <Space
+                    android:layout_width="11.2dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    android:id="@+id/win_close_all_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/hub_windows_close_all"
+                    android:textColor="@color/hub_control_text"
+                    android:textSize="19.7sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Палитра рабочего стола EX2 HUB (HubPalettes.Blue → HomeTones). -->
+<resources>
+    <color name="hub_card_bg">#FF071B36</color>
+    <color name="hub_card_border">#FF153760</color>
+    <color name="hub_panel_bg">#FF071B36</color>
+    <color name="hub_panel_border">#FF153760</color>
+
+    <color name="hub_control_bg">#FF0A2447</color>
+    <color name="hub_control_border">#FF1C4374</color>
+    <color name="hub_control_on_bg">#FF103E7C</color>
+    <color name="hub_control_on_border">#FF3F8CFF</color>
+    <color name="hub_control_text">#FFC7DBF5</color>
+    <color name="hub_control_on_text">#FFF2F8FF</color>
+
+    <color name="hub_title">#FFEAF3FF</color>
+    <color name="hub_label">#FF9DB6DA</color>
+    <color name="hub_value">#FFF2F7FF</color>
+    <color name="hub_dim">#FF6B87AE</color>
+    <color name="hub_accent">#FF3D8BFF</color>
+    <color name="hub_track">#FF0E2542</color>
+    <color name="hub_icon">#FF8DAEDB</color>
+    <color name="hub_icon_on">#FF8CC3FF</color>
+</resources>
