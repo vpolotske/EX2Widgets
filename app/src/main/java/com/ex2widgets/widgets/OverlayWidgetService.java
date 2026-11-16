@@ -349,6 +349,9 @@ public final class OverlayWidgetService extends Service {
 
     private void bindDrag(OverlaySpec spec, FrameLayout container, View content,
                           WindowManager.LayoutParams lp) {
+        // Закреплённые панели не слушают перетаскивание вовсе: слушатель,
+        // который ничего не делает, только съел бы касания карточки.
+        if (Prefs.overlayLocked(this)) return;
         View drag = content.findViewById(R.id.widget_bg_layer);
         if (drag == null || drag.getVisibility() != View.VISIBLE) drag = content;
         View.OnTouchListener listener = new View.OnTouchListener() {

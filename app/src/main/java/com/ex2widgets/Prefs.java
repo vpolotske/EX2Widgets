@@ -83,6 +83,18 @@ public final class Prefs {
     }
 
     /**
+     * Закрепить панели на месте: перетаскивание по экрану выключено, чтобы
+     * случайное касание не сдвинуло настроенную карточку.
+     */
+    public static boolean overlayLocked(Context c) {
+        return get(c).getBoolean("overlay_locked", false);
+    }
+
+    public static void setOverlayLocked(Context c, boolean value) {
+        get(c).edit().putBoolean("overlay_locked", value).apply();
+    }
+
+    /**
      * Прятать ли панели, когда впереди приложение. Выключено — панели висят
      * всегда, как в 1.0.1: это аварийный режим на случай, если система не
      * говорит правду про передний экран.

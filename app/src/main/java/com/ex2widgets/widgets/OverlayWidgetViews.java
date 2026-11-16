@@ -226,12 +226,14 @@ final class OverlayWidgetViews {
         } else if (Boolean.FALSE.equals(open)) {
             stateRes = parked ? R.string.hub_frunk_closed : R.string.hub_frunk_only_park;
         } else {
-            stateRes = R.string.hub_frunk_no_car;
+            // Автомобиль не ответил: про связь ничего не пишем, только прочерк.
+            stateRes = R.string.hub_dash;
         }
         text(root, R.id.frunk_state, t.getString(stateRes));
         color(t, root, R.id.frunk_state,
                 stateRes == R.string.hub_frunk_is_open || stateRes == R.string.hub_frunk_requested
-                        ? R.color.hub_icon_on : R.color.hub_value);
+                        ? R.color.hub_icon_on
+                        : stateRes == R.string.hub_dash ? R.color.hub_dim : R.color.hub_value);
         tile(t, root, R.id.frunk_open, R.id.frunk_open_text, 0, Boolean.TRUE.equals(open));
         text(root, R.id.frunk_open_text, t.getString(R.string.hub_frunk_open));
     }

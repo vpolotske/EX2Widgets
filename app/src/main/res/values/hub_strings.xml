@@ -32,7 +32,7 @@
 
     <string name="hub_preset_cool">Быстрое охлаждение</string>
     <string name="hub_preset_heat">Быстрый обогрев</string>
-    <string name="hub_ac">Кондиционер</string>
+    <string name="hub_ac">A/C</string>
 
     <string name="hub_seat_driver">Водитель</string>
     <string name="hub_seat_passenger">Пассажир</string>
@@ -67,5 +67,4 @@
     <string name="hub_frunk_is_open">Открыт</string>
     <string name="hub_frunk_requested">Запрос отправлен</string>
     <string name="hub_frunk_only_park">Доступно в P</string>
-    <string name="hub_frunk_no_car">Нет связи с авто</string>
 </resources>

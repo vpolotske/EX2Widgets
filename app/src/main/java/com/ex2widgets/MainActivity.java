@@ -45,6 +45,7 @@ public final class MainActivity extends Activity {
     private TextView detectHint;
     private TextView detectLog;
     private Switch hideBehind;
+    private Switch lockPosition;
     /** Живое обновление строк определения: без него не увидеть, что менялось, пока открыт экран. */
     private final android.os.Handler detectTick = new android.os.Handler(android.os.Looper.getMainLooper());
     private final Runnable detectLoop = new Runnable() {
@@ -71,6 +72,7 @@ public final class MainActivity extends Activity {
         detectHint = findViewById(R.id.detectHint);
         detectLog = findViewById(R.id.detectLog);
         hideBehind = findViewById(R.id.hideBehind);
+        lockPosition = findViewById(R.id.lockPosition);
         globalAlphaValue = findViewById(R.id.globalAlphaValue);
         globalAlphaSeek = findViewById(R.id.globalAlphaSeek);
 
@@ -93,6 +95,13 @@ public final class MainActivity extends Activity {
             Prefs.setHideBehindApps(MainActivity.this, checked);
             OverlayWidgetService.restart(MainActivity.this);
             LogStore.add(this, "hide behind apps: " + checked);
+        });
+        lockPosition.setOnCheckedChangeListener((button, checked) -> {
+            Prefs.setOverlayLocked(MainActivity.this, checked);
+            // Служба вешает слушатель перетаскивания при создании окна,
+            // так что закрепление применяется перезапуском наложения.
+            OverlayWidgetService.restart(MainActivity.this);
+            LogStore.add(this, "panels locked: " + checked);
         });
 
         globalAlphaSeek.setMax(100);
@@ -140,6 +149,7 @@ public final class MainActivity extends Activity {
         refreshMode();
         refreshPermission();
         refreshDetection();
+        refreshLock();
         int global = Prefs.widgetBgOpacity(this);
         globalAlphaSeek.setOnSeekBarChangeListener(null);
         globalAlphaSeek.setProgress(global);
@@ -171,6 +181,12 @@ public final class MainActivity extends Activity {
             text.append(getString(R.string.status_mode_widget, launcher));
         }
         modeStatus.setText(text.toString());
+    }
+
+    /** Переключатель закрепления всегда показывает то, что реально служит. */
+    private void refreshLock() {
+        boolean locked = Prefs.overlayLocked(this);
+        if (lockPosition.isChecked() != locked) lockPosition.setChecked(locked);
     }
 
     /**

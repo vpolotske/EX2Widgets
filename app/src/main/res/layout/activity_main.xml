@@ -231,6 +231,32 @@
             android:layout_width="match_parent"
             android:layout_height="18dp" />
 
+        <!-- Положение панелей: перетаскивание выключается одним переключателем. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/hub_card_100"
+            android:orientation="vertical"
+            android:padding="22dp">
+
+            <Switch
+                android:id="@+id/lockPosition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_position"
+                android:textColor="@color/hub_label"
+                android:textSize="16sp" />
+
+            <TextView
+                style="@style/SettingsText"
+                android:layout_marginTop="6dp"
+                android:text="@string/settings_lock_position_note" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="18dp" />
+
         <!-- По одному блоку на виджет: показ, размер, прозрачность, положение. -->
         <LinearLayout
             android:id="@+id/widgetsContainer"

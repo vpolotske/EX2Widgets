@@ -37,13 +37,13 @@ public final class WidgetCatalog {
                     507, 186, 547, 706, PANEL_CORNER, R.id.widget_bg_layer),
             new Spec(OUTSIDE_TEMP, R.string.widget_name_hub_outside_temp,
                     R.layout.widget_hub_outside_temp, HubOutsideTempWidgetProvider.class,
-                    336, 186, 20, 31, CARD_CORNER, R.id.widget_bg_layer),
+                    235, 186, 20, 31, CARD_CORNER, R.id.widget_bg_layer),
             new Spec(WINDOWS, R.string.widget_name_hub_windows,
                     R.layout.widget_hub_windows, HubWindowsWidgetProvider.class,
                     660, 460, 20, 227, CARD_CORNER, R.id.widget_bg_layer),
             new Spec(FRUNK, R.string.widget_name_hub_frunk,
                     R.layout.widget_hub_frunk, HubFrunkWidgetProvider.class,
-                    360, 186, 380, 31, CARD_CORNER, R.id.widget_bg_layer),
+                    252, 186, 380, 31, CARD_CORNER, R.id.widget_bg_layer),
     };
 
     private WidgetCatalog() {
