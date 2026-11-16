@@ -87,6 +87,20 @@
                     style="@style/SettingsControl"
                     android:text="@string/settings_overlay_permission" />
             </LinearLayout>
+
+            <!-- Живой ответ по разрешению: выдано, чем открыли и что делать вручную. -->
+            <TextView
+                android:id="@+id/permissionStatus"
+                style="@style/SettingsText"
+                android:layout_marginTop="14dp"
+                android:text="@string/settings_loading" />
+
+            <TextView
+                android:id="@+id/permissionHint"
+                style="@style/SettingsText"
+                android:layout_marginTop="10dp"
+                android:textIsSelectable="true"
+                android:visibility="gone" />
         </LinearLayout>
 
         <Space

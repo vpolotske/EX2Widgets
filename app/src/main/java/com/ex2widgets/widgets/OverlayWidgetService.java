@@ -36,6 +36,15 @@ public final class OverlayWidgetService extends Service {
     private static final long POLL_MS = 1000L;
     private static final String ACTION_RESTART = "com.ex2widgets.overlay.RESTART";
 
+    /**
+     * Макет EX2 HUB снимался с экрана 1768×1080, поэтому размеры и места в
+     * каталоге — пиксели макета, а не пикселя конкретного дисплея. Перенос
+     * идёт одним равномерным масштабом: на самом ГУ он равен единице, на
+     * телефоне панели остаются в границах экрана, а не уезжают за край.
+     */
+    private static final float DESIGN_WIDTH = 1768f;
+    private static final float DESIGN_HEIGHT = 1080f;
+
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<OverlaySpec> specs = new ArrayList<>();
     public static volatile boolean running;
@@ -69,7 +78,8 @@ public final class OverlayWidgetService extends Service {
                 boolean enabled = Prefs.widgetEnabled(OverlayWidgetService.this, spec.key);
                 anyEnabled |= enabled;
                 boolean pinned = Prefs.overlayPinned(OverlayWidgetService.this, spec.key);
-                boolean show = enabled && !state.appList && (pinned || state.launcher);
+                // Закреплённая панель не зависит от того, умел ли определить рабочий стол.
+                boolean show = enabled && (pinned || (state.launcher && !state.appList));
                 if (show) {
                     ensure(spec);
                     update(spec);
@@ -195,19 +205,23 @@ public final class OverlayWidgetService extends Service {
     private void ensure(OverlaySpec spec) {
         if (spec.view != null || windowManager == null) return;
         try {
-            View content = OverlayWidgetViews.create(this, spec.key);
+            int size = Prefs.widgetSizePct(this, spec.key);
+            float factor = designFactor() * size / 100f;
+            // Плотность scaled-контекста равна factor, поэтому каждый dp и sp
+            // разметки занимает ровно factor пикселей экрана: панель выглядит
+            // как макет, а не как макет, обрезанный по размеру окна.
+            Context host = scaledContext(factor);
+            View content = OverlayWidgetViews.create(host, spec.key);
             FrameLayout container = new FrameLayout(this);
             container.addView(content, new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT));
 
-            int size = Prefs.widgetSizePct(this, spec.key);
-            int width = Math.max(1, Math.round(spec.widthDp * density() * size / 100f));
-            int height = Math.max(1, Math.round(spec.heightDp * density() * size / 100f));
-            width = Math.min(width, Math.max(1,
-                    getResources().getDisplayMetrics().widthPixels - dp(16)));
-            height = Math.min(height, Math.max(1,
-                    getResources().getDisplayMetrics().heightPixels - dp(16)));
+            android.util.DisplayMetrics screen = getResources().getDisplayMetrics();
+            int width = Math.min(Math.max(1, Math.round(spec.widthDp * factor)),
+                    screen.widthPixels);
+            int height = Math.min(Math.max(1, Math.round(spec.heightDp * factor)),
+                    screen.heightPixels);
             WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                     width, height,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -215,25 +229,31 @@ public final class OverlayWidgetService extends Service {
                             | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                     PixelFormat.TRANSLUCENT);
             lp.gravity = Gravity.TOP | Gravity.START;
-            lp.x = Prefs.overlayX(this, spec.key, spec.defaultX);
-            lp.y = Prefs.overlayY(this, spec.key, spec.defaultY);
+            lp.x = place(Prefs.overlayX(this, spec.key), spec.defaultX, factor, width,
+                    screen.widthPixels);
+            lp.y = place(Prefs.overlayY(this, spec.key), spec.defaultY, factor, height,
+                    screen.heightPixels);
 
             bindDrag(spec, container, content, lp);
             windowManager.addView(container, lp);
+            spec.host = host;
             spec.view = container;
             spec.content = content;
             spec.params = lp;
             LogStore.add(this, "overlay added " + spec.key + " " + width + "x" + height
-                    + " at " + lp.x + "," + lp.y);
+                    + " at " + lp.x + "," + lp.y + " factor=" + factor);
         } catch (Throwable t) {
             LogStore.add(this, "overlay add " + spec.key + " failed: " + t);
+            // Разрешение могли отозвать, пока служба работала: повторять бессмысленно.
+            if (!Settings.canDrawOverlays(this)) stopSelf();
         }
     }
 
     private void update(OverlaySpec spec) {
         if (spec.view == null || spec.content == null) return;
         try {
-            OverlayWidgetViews.update(this, spec.content, spec.key);
+            Context host = spec.host != null ? spec.host : this;
+            OverlayWidgetViews.update(host, spec.content, spec.key);
         } catch (Throwable t) {
             LogStore.add(this, "overlay update " + spec.key + " failed: " + t);
         }
@@ -245,9 +265,43 @@ public final class OverlayWidgetService extends Service {
             windowManager.removeView(spec.view);
         } catch (Throwable ignored) {
         }
+        spec.host = null;
         spec.view = null;
         spec.content = null;
         spec.params = null;
+    }
+
+    /** Макет 1768×1080 целиком, с сохранением пропорций, на текущем экране. */
+    private float designFactor() {
+        android.util.DisplayMetrics screen = getResources().getDisplayMetrics();
+        float width = screen.widthPixels > 0 ? screen.widthPixels : DESIGN_WIDTH;
+        float height = screen.heightPixels > 0 ? screen.heightPixels : DESIGN_HEIGHT;
+        return Math.min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT);
+    }
+
+    /**
+     * Контекст с плотностью factor: разметка виджета пересчитывает в пиксели
+     * все dp и sp через неё, поэтому окно и содержимое масштабируются вместе.
+     */
+    private Context scaledContext(float factor) {
+        Configuration config = new Configuration(getResources().getConfiguration());
+        config.densityDpi = Math.max(1, Math.round(160f * factor));
+        // Крупный системный шрифт не должен ломать сетку макета: панель и так
+        // масштабируется ползунком размера.
+        config.fontScale = 1f;
+        try {
+            return createConfigurationContext(config);
+        } catch (Throwable t) {
+            LogStore.add(this, "overlay scaled context failed: " + t);
+            return this;
+        }
+    }
+
+    /** Место панели: сохранённое перетаскиванием или макетное, но всегда в границах экрана. */
+    private int place(int stored, int defaultDesignPx, float factor, int sizePx, int limitPx) {
+        int value = stored == Prefs.POSITION_UNSET
+                ? Math.round(defaultDesignPx * factor) : stored;
+        return Math.max(0, Math.min(value, Math.max(0, limitPx - sizePx)));
     }
 
     private void bindDrag(OverlaySpec spec, FrameLayout container, View content,
@@ -315,11 +369,16 @@ public final class OverlayWidgetService extends Service {
             }
             ComponentName top = tasks.get(0).topActivity;
             if (top == null) return new ForegroundState(true, false);
+            String pkg = top.getPackageName() == null ? "" : top.getPackageName();
+            // Наши экраны (настройки) панелью перекрывать нельзя.
+            if (pkg.equals(getPackageName())) return new ForegroundState(false, false);
             String cls = top.getClassName() == null ? "" : top.getClassName();
             String home = WidgetModes.launcherPackage(this);
-            boolean stock = WidgetModes.STOCK_LAUNCHER.equals(top.getPackageName());
-            boolean appList = stock && cls.contains("AppListActivity");
-            boolean homeVisible = !home.isEmpty() && home.equals(top.getPackageName());
+            boolean appList = WidgetModes.STOCK_LAUNCHER.equals(pkg)
+                    && cls.contains("AppListActivity");
+            // Если лаунчер определить не удалось, молча прятать панели — неверно:
+            // показываем, а пользователь закрепит нужный вариант сам.
+            boolean homeVisible = home.isEmpty() || home.equals(pkg);
             return new ForegroundState(homeVisible && !appList, appList);
         } catch (Throwable t) {
             LogStore.add(this, "overlay foreground check failed: " + t);
@@ -355,6 +414,7 @@ public final class OverlayWidgetService extends Service {
         final int heightDp;
         final int defaultX;
         final int defaultY;
+        Context host;
         View view;
         View content;
         WindowManager.LayoutParams params;

@@ -20,26 +20,39 @@
     <string name="settings_overlay_permission">Разрешение на наложение</string>
     <string name="settings_opacity_global">Общая прозрачность</string>
     <string name="settings_opacity_note">Перемножается с прозрачностью каждого виджета.</string>
-    <string name="settings_add_hint">Штатный экран Flyme Auto не принимает виджеты рабочего стола — для него нужен режим «Поверх экрана»: панель рисуется над рабочим столом, её размер и положение задаются здесь. Если установлен сторонний лаунчер, виджет добавляется обычным способом: долгое нажатие по рабочему столу → Виджеты → EX2 Widgets. У такого виджета размер меняется перетаскиванием края, ползунок размера работает только для панелей; прозрачность действует в обоих режимах.</string>
+    <string name="settings_add_hint">Штатный экран Flyme Auto не принимает виджеты рабочего стола — для него нужен режим «Поверх экрана»: панель рисуется над рабочим столом, её размер и положение задаются здесь. Если установлен сторонний лаунчер, виджет добавляется обычным способом: долгое нажатие по рабочему столу → Виджеты → EX2 Widgets. У такого виджета размер меняется перетаскиванием края, ползунок размера работает только для панелей; прозрачность действует в обоих режимах.\n\nПанели появляются, пока открыт рабочий стол. Если лаунчер не определяется и панель на экране так и не встала, нажмите «Всегда показывать» у этого виджета — панель перестанет прятаться. Размер панелей пересчитывается из макета 1768×1080 под экран устройства, поэтому на другом разрешении сетка остаётся на своих местах.</string>
 
     <!-- Блок одного виджета. -->
     <string name="settings_show_overlay">Поверх экрана</string>
     <string name="settings_size">Размер</string>
     <string name="settings_opacity">Прозрачность</string>
     <string name="settings_reset_position">Сбросить положение</string>
-    <string name="settings_pin">Закрепить</string>
-    <string name="settings_unpin">Открепить</string>
+    <string name="settings_pin">Всегда показывать</string>
+    <string name="settings_unpin">Только экран</string>
 
     <!-- Строк статуса. -->
     <string name="status_mode_auto">Режим выбирается автоматически по лаунчеру %1$s.</string>
-    <string name="status_mode_overlay">Режим: панели поверх экрана. Они видны, когда открыт рабочий стол.</string>
+    <string name="status_mode_overlay">Режим: панели поверх экрана. Они видны, когда открыт рабочий стол, а с кнопкой «Всегда показывать» — в любом приложении.</string>
     <string name="status_mode_widget">Режим: виджеты рабочего экрана. Добавьте их из списка виджетов лаунчера %1$s.</string>
-    <string name="status_no_permission">Нет разрешения на наложение — панели не появятся.</string>
-    <string name="status_overlay_wait">Разрешение есть, панели появятся на рабочем столе.</string>
+    <string name="status_no_permission">Без разрешения на наложение панели не появятся.</string>
     <string name="fmt_percent">%1$d%%</string>
     <string name="status_widget_none">виджет на экран не добавлен</string>
     <string name="status_widget_count">виджетов на экране: %1$d</string>
-    <string name="overlay_state_on">панель активна</string>
+    <string name="overlay_state_on">панель активна на рабочем столе</string>
+    <string name="overlay_state_pinned">панель активна всегда</string>
     <string name="overlay_state_off">панель выключена</string>
+    <string name="overlay_state_starting">панель ждёт запуска службы наложения</string>
+    <string name="overlay_state_no_permission">панель ждёт разрешения на наложение</string>
     <string name="status_widget_line">%1$s · %2$s</string>
+
+    <!-- Разрешение на наложение: чем открыли и что делать, если открыть нечем. -->
+    <string name="status_perm_overlay_granted">Разрешение на наложение: выдано.</string>
+    <string name="status_perm_overlay_missing">Разрешение на наложение: не выдано.</string>
+    <string name="perm_screen_overlay">системный экран «Поверх других приложений»</string>
+    <string name="perm_screen_miui">редактор прав MIUI</string>
+    <string name="perm_screen_overlay_list">общий список приложений с наложением</string>
+    <string name="perm_screen_details">карточка приложения</string>
+    <string name="status_perm_opened">Открыт %1$s — включите наложение там и вернитесь сюда.</string>
+    <string name="status_perm_no_screen">В этой системе нет экрана разрешений на наложение: ни один способ не открылся.</string>
+    <string name="settings_perm_manual">Вручную: Настройки → Приложения → все приложения → EX2 Widgets → «Поверх других приложений». Если пункта нет (штатный экран Flyme Auto), разрешение выдаётся по adb:\nadb shell appops set %1$s SYSTEM_ALERT_WINDOW allow\nпосле чего откройте приложение ещё раз.</string>
 </resources>

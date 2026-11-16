@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -14,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ex2widgets.widgets.OverlayWidgetService;
 import com.ex2widgets.widgets.WidgetCatalog;
@@ -37,8 +39,12 @@ public final class MainActivity extends Activity {
     private final List<Row> rows = new ArrayList<>();
 
     private TextView modeStatus;
+    private TextView permissionStatus;
+    private TextView permissionHint;
     private TextView globalAlphaValue;
     private SeekBar globalAlphaSeek;
+    /** Экран разрешений, который реально открылся, — им же и отвечаем на «не открылся». */
+    private String permissionScreen;
 
     @Override
     protected void onCreate(Bundle saved) {
@@ -46,6 +52,8 @@ public final class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         modeStatus = findViewById(R.id.modeStatus);
+        permissionStatus = findViewById(R.id.permissionStatus);
+        permissionHint = findViewById(R.id.permissionHint);
         globalAlphaValue = findViewById(R.id.globalAlphaValue);
         globalAlphaSeek = findViewById(R.id.globalAlphaSeek);
 
@@ -61,7 +69,7 @@ public final class MainActivity extends Activity {
             WidgetModes.set(this, Prefs.WIDGET_MODE_THIRD_PARTY);
             refresh();
         });
-        findViewById(R.id.overlayPermission).setOnClickListener(v -> openOverlayPermission());
+        findViewById(R.id.overlayPermission).setOnClickListener(v -> requestOverlayPermission());
 
         globalAlphaSeek.setMax(100);
         globalAlphaSeek.setOnSeekBarChangeListener(new SeekCommit() {
@@ -91,11 +99,15 @@ public final class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         WidgetModes.current(this);
+        // Разрешение могли выдать, пока этот экран был сзади — служба об этом
+        // не узнает сама, пусть проверит сразу.
+        OverlayWidgetService.sync(this);
         refresh();
     }
 
     private void refresh() {
         refreshMode();
+        refreshPermission();
         int global = Prefs.widgetBgOpacity(this);
         globalAlphaSeek.setOnSeekBarChangeListener(null);
         globalAlphaSeek.setProgress(global);
@@ -118,7 +130,6 @@ public final class MainActivity extends Activity {
     private void refreshMode() {
         int mode = Prefs.widgetMode(this);
         String launcher = WidgetModes.launcherName(this);
-        boolean permitted = Settings.canDrawOverlays(this);
         StringBuilder text = new StringBuilder();
         if (!Prefs.widgetModeManual(this)) {
             text.append(getString(R.string.status_mode_auto, launcher));
@@ -127,10 +138,31 @@ public final class MainActivity extends Activity {
         } else {
             text.append(getString(R.string.status_mode_widget, launcher));
         }
-        if (mode == Prefs.WIDGET_MODE_STOCK && !permitted) {
-            text.append("\n").append(getString(R.string.status_no_permission));
-        }
         modeStatus.setText(text.toString());
+    }
+
+    /**
+     * Отдельная строка про наложение: ползунок «Поверх экрана» работает в любом
+     * режиме, поэтому и про разрешение спрашиваем, когда хоть одна панель
+     * включена, а не только в режиме «Поверх экрана».
+     */
+    private void refreshPermission() {
+        boolean permitted = Settings.canDrawOverlays(this);
+        boolean wanted = OverlayWidgetService.hasEnabled(this);
+        if (permitted) {
+            permissionStatus.setText(R.string.status_perm_overlay_granted);
+            permissionHint.setVisibility(View.GONE);
+            return;
+        }
+        StringBuilder text = new StringBuilder();
+        text.append(getString(R.string.status_perm_overlay_missing));
+        if (wanted) text.append(" ").append(getString(R.string.status_no_permission));
+        if (permissionScreen != null) {
+            text.append("\n").append(getString(R.string.status_perm_opened, permissionScreen));
+        }
+        permissionStatus.setText(text.toString());
+        permissionHint.setVisibility(View.VISIBLE);
+        permissionHint.setText(getString(R.string.settings_perm_manual, getPackageName()));
     }
 
     /** Прозрачность и размер применяются к обеим дорогам показа сразу. */
@@ -156,12 +188,68 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private void openOverlayPermission() {
+    /**
+     * Экран выдачи наложения ищется среди нескольких путей: Flyme Auto и MIUI
+     * отвечают по-разному, а молча провалившийся запрос выглядит для
+     * пользователя как «кнопка не работает».
+     */
+    private void requestOverlayPermission() {
+        if (Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, R.string.status_perm_overlay_granted, Toast.LENGTH_SHORT).show();
+            OverlayWidgetService.sync(this);
+            refresh();
+            return;
+        }
+        String pkg = "package:" + getPackageName();
+        Intent[] intents = {
+                new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse(pkg)),
+                miuiPermissionEditor("com.miui.permcenter.permissions.PermissionsEditorActivity"),
+                miuiPermissionEditor("com.miui.permcenter.permissions.AppPermissionsEditorActivity"),
+                new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION),
+                new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse(pkg)),
+        };
+        String[] labels = {
+                getString(R.string.perm_screen_overlay),
+                getString(R.string.perm_screen_miui),
+                getString(R.string.perm_screen_miui),
+                getString(R.string.perm_screen_overlay_list),
+                getString(R.string.perm_screen_details),
+        };
+        for (int i = 0; i < intents.length; i++) {
+            if (intents[i] == null || !resolvable(intents[i])) continue;
+            try {
+                startActivity(intents[i]);
+                permissionScreen = labels[i];
+                LogStore.add(this, "overlay permission screen opened: " + labels[i]);
+                refresh();
+                return;
+            } catch (Throwable t) {
+                LogStore.add(this, "overlay permission screen failed: " + labels[i] + " " + t);
+            }
+        }
+        permissionScreen = null;
+        LogStore.add(this, "no overlay permission screen available");
+        Toast.makeText(this, R.string.status_perm_no_screen, Toast.LENGTH_LONG).show();
+        refresh();
+    }
+
+    /** Разрешение на наложение в MIUI живёт в своём редакторе прав приложения. */
+    private Intent miuiPermissionEditor(String activity) {
         try {
-            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName())));
-        } catch (Throwable t) {
-            LogStore.add(this, "overlay permission screen unavailable: " + t);
+            return new Intent("miui.intent.action.APP_PERM_EDITOR")
+                    .setClassName("com.miui.securitycenter", activity)
+                    .putExtra("extra_pkgname", getPackageName());
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private boolean resolvable(Intent intent) {
+        try {
+            return getPackageManager().resolveActivity(intent,
+                    PackageManager.MATCH_DEFAULT_ONLY) != null;
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 
@@ -249,10 +337,14 @@ public final class MainActivity extends Activity {
             String overlayPart;
             if (!enabled) {
                 overlayPart = getString(R.string.overlay_state_off);
-            } else if (OverlayWidgetService.isRunning()) {
-                overlayPart = getString(R.string.overlay_state_on);
+            } else if (!Settings.canDrawOverlays(MainActivity.this)) {
+                overlayPart = getString(R.string.overlay_state_no_permission);
+            } else if (!OverlayWidgetService.isRunning()) {
+                overlayPart = getString(R.string.overlay_state_starting);
+            } else if (Prefs.overlayPinned(MainActivity.this, spec.key)) {
+                overlayPart = getString(R.string.overlay_state_pinned);
             } else {
-                overlayPart = getString(R.string.status_overlay_wait);
+                overlayPart = getString(R.string.overlay_state_on);
             }
             return getString(R.string.status_widget_line, widgetPart, overlayPart);
         }
@@ -261,6 +353,9 @@ public final class MainActivity extends Activity {
             Prefs.setWidgetEnabled(MainActivity.this, spec.key, enabled);
             OverlayWidgetService.sync(MainActivity.this);
             refresh();
+            if (enabled && !Settings.canDrawOverlays(MainActivity.this)) {
+                requestOverlayPermission();
+            }
         }
 
         private void setSize(int percent) {
@@ -274,7 +369,7 @@ public final class MainActivity extends Activity {
         }
 
         private void resetPosition() {
-            Prefs.setOverlayPos(MainActivity.this, spec.key, spec.defaultX, spec.defaultY);
+            Prefs.clearOverlayPos(MainActivity.this, spec.key);
             OverlayWidgetService.restart(MainActivity.this);
         }
 

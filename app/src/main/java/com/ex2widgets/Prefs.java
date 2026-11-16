@@ -10,6 +10,9 @@ public final class Prefs {
     public static final int WIDGET_MODE_STOCK = 0;
     public static final int WIDGET_MODE_THIRD_PARTY = 1;
 
+    /** Положение панели ещё не двигали: брать место из макета. */
+    public static final int POSITION_UNSET = Integer.MIN_VALUE;
+
     private static volatile SharedPreferences cached;
 
     private Prefs() {
@@ -61,16 +64,22 @@ public final class Prefs {
         get(c).edit().putInt("widget_" + key + "_alpha_pct", clamp(value, 0, 100)).apply();
     }
 
-    public static int overlayX(Context c, String key, int fallback) {
-        return get(c).getInt("overlay_" + key + "_x", fallback);
+    /** Пиксели текущего экрана; POSITION_UNSET — панель ещё не сдвигали с макетного места. */
+    public static int overlayX(Context c, String key) {
+        return get(c).getInt("overlay_" + key + "_x", POSITION_UNSET);
     }
 
-    public static int overlayY(Context c, String key, int fallback) {
-        return get(c).getInt("overlay_" + key + "_y", fallback);
+    public static int overlayY(Context c, String key) {
+        return get(c).getInt("overlay_" + key + "_y", POSITION_UNSET);
     }
 
     public static void setOverlayPos(Context c, String key, int x, int y) {
         get(c).edit().putInt("overlay_" + key + "_x", x).putInt("overlay_" + key + "_y", y).apply();
+    }
+
+    /** Вернуть макетное место: сохранённые пиксели экрана больше не при чём. */
+    public static void clearOverlayPos(Context c, String key) {
+        get(c).edit().remove("overlay_" + key + "_x").remove("overlay_" + key + "_y").apply();
     }
 
     public static boolean overlayPinned(Context c, String key) {
