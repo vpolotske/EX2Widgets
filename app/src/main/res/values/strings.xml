@@ -83,5 +83,6 @@
     <string name="overlay_detect_no_resumes">С начала показа ни один экран не выходил на передний план: журнал использования пуст, решение держится на списке задач.</string>
     <string name="overlay_hide_app">панели спрятаны: открыто %1$s</string>
     <string name="overlay_hide_applist">панели спрятаны: открыт список приложений</string>
+    <string name="overlay_hide_unknown">панели скрыты: активный экран не определён</string>
     <string name="overlay_hide_ours">панели спрятаны: открыты настройки EX2 Widgets</string>
 </resources>
